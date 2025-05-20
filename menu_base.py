@@ -4,27 +4,23 @@
 from datetime import datetime, date
 import csv
 
-# Listas para armazenar os produtos e as compras
+# Essa é a lista que armazena os produtos disponíveis
 lista_produtos = []
+# Essa lista armazena as compras realizadas no momento
 carrinho_de_compras = []
 
 
-# Classe Produto
+# Classe Produto -> Como se fosse um molde dos produtos que serão armazenados
 class Produto:
-    def __init__(self, nome, preco, quantidade,validade):
+    def __init__(self, nome, preco, quantidade):
         self.nome = nome
         self.preco = preco
         self.quantidade = max(quantidade, 0)  # Garante que a quantidade não seja negativa
-        self.validade = validade # Adicionando a data de validade do produto
         self.data_cadastro = date.today() # Data de cadastro do produto
 
     def __str__(self):
         return (f"{self.nome} - R$ {self.preco:.2f} | Estoque: {self.quantidade} | "
                 f"Cadastrado em: {self.data_cadastro} | Validade: {self.validade}")
-        
-    def esta_vencido(self):
-        return self.validade < date.today()
-    
     def atualizar_estoque(self, quantidade_comprada: int):
         # referencia a lista_produtos
         global lista_produtos
@@ -43,157 +39,26 @@ class Produto:
 
 print('Bem-vindo ao sistema de compras!')
 
-# Menu de opções do sistema
+# Essa função é o menu que o usuário irá ver na hora de realizar as compras
 def menu():
     print('''[1] - Cadastrar vendas
 [2] - Cadastrar Novo Produto
-[3] - Gerenciar o estoque
-[4] - Importar produtos de um arquivo CSV
-[5] - Sair do sistema''')
-    
-def ImportarVendasCSV():
-    caminho = input("Digite o caminho completo do arquivo CSV de vendas: ").strip()
-    try:
-        with open(caminho, newline='', encoding='utf-8') as csvfile:
-            leitor = csv.DictReader(csvfile)
-            vendas_importadas = 0
-            for linha in leitor:
-                try:
-                    ####Lê os dados do CSV####
-                    # Verifica se o nome do produto não está vazio
-                    nome = linha['nome']
-                    # Verifica se o nome do produto não está vazio
-                    if not nome:
-                        print("Nome do produto não pode ser vazio.")
-                        continue
-                    preco= float(linha['preco'])
-                    # Verifica se o preço é um número positivo
-                    if preco < 0:
-                        print(f"Preço inválido para o produto {nome}.")
-                        continue
-                    # Verifica se a quantidade é um número inteiro positivo
-                    if not linha['quantidade'].isdigit():
-                        print(f"Quantidade inválida para o produto {nome}.")
-                        continue
-                    quantidade = int(linha['quantidade'])
+[3] - Importar produtos de um arquivo CSV
+[4] - Sair do sistema''')
 
-                    # Verifica se a validade não está vazia
-                    # Se a validade não estiver no formato correto, ignora a venda
-                    if not linha['data_validade']:
-                        print(f"Data de validade não pode ser vazia para o produto {nome}.")
-                        continue
-                    validade = linha['data_validade']
-
-                    # Verifica se a data de validade está no formato correto
-                    #######PROLEMA NA VALIDAÇÃO DE DATA######
-                    #BUG: A data de validade não está sendo validada corretamente
-                    try:
-                        validade = datetime.strptime(validade, "%d/%m/%Y").date()
-                    except ValueError:
-                        print(f"Data de validade inválida para o produto {nome}.")
-                        continue
-                    data_venda = datetime.strptime(linha['data'], "%d/%m/%Y").date()
-            
-                    
-
-                    # Verifica se a data de venda é válida
-                    # Se a data de venda for uma data futura, ignora a venda
-                    date_hoje = date.today()
-                    if data_venda > date_hoje:
-                        print(f" Data de venda inválida: {data_venda} (maior que a data atual)")
-                        continue
-                    
-                    # Verifica se o produto existe no estoque
-                    # Se o produto não existir, ignora a venda
-                    # Se o produto estiver vencido, ignora a venda
-                    produto = next((p for p in lista_produtos if p.nome == nome), None)
-
-                    # Se o produto não existir, ignora a venda
-                    if not produto:
-                        print(f" Produto não encontrado no estoque: {nome}")
-                        continue
-
-                    # Se o produto estiver vencido, ignora a venda
-                    if produto.esta_vencido():
-                        print(f" Produto vencido ignorado na venda: {nome}")
-                        continue
-                    
-                    # Verifica se a quantidade solicitada é maior que a disponível
-                    if quantidade > produto.quantidade:
-                        print(f" Estoque insuficiente para {nome} (pedido: {quantidade}, disponível: {produto.quantidade})")
-                        continue
-
-                    # Subtrai do estoque
-                    produto.quantidade -= quantidade
-                    vendas_importadas += 1
-                    print(f" Venda registrada: {nome} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
-
-                except Exception as e:
-                    print(f"Erro ao importar linha: {linha} -> {e}")
-            
-            print(f"\n {vendas_importadas} venda(s) registrada(s) com sucesso!\n")
-
-    except FileNotFoundError:
-        print("Arquivo não encontrado.")
-    except Exception as e:
-        print(f"Erro ao ler o arquivo: {e}")
-
-
-
-# Cadastro de novos produtos
+# Essa é a função responsável por adcionar novos produtos
 def CadastroProduto():
     nome_produto = input('Digite o nome do produto: ')
     preco_produto = float(input('Digite o preço do produto: '))
     quantidade = int(input("Digite a quantidade disponível: "))
-    validade = str (input("Digite a data de validade do produto (dd/mm/aaaa): "))
 
-    # Verifica se o produto está na validade
-    try:
-        validade = datetime.strptime(validade, "%d/%m/%Y").date()
-    except ValueError:
-        print("Data inválida! Produto não cadastrado.")
-        return
-
-    if validade < date.today():
-        print("Produto vencido! Não é pode cadastrar no estoque.")
-        return
-
-    novo_produto = Produto(nome_produto, preco_produto, quantidade, validade)
+    novo_produto = Produto(nome_produto, preco_produto, quantidade)
     lista_produtos.append(novo_produto)
 
     print('---' * 20)
     print(f'Produto "{nome_produto}" cadastrado com sucesso por R${preco_produto:.2f}!')
     print(f"Data de cadastro: {novo_produto.data_cadastro}")
-    print(f"Validade: {novo_produto.validade}")
 
-
-# Gerenciar o estoque (Listar, Remover e Editar)
-def GerenciarEstoque():
-    while True:
-        print('---' * 20)
-        if not lista_produtos:
-            print("Nenhum produto cadastrado.")
-            return
-
-        print("[1] - Listar produtos")
-        print("[2] - Remover produto")
-        print("[3] - Editar produto")
-        print("[4] - Voltar ao menu principal")
-        opcao = input("Escolha uma opção: ")
-
-        if opcao == '1':
-            ListarProdutos()
-
-        elif opcao == '2':
-            RemoverProduto()
-
-        elif opcao == '3':
-            EditarProduto()
-
-        elif opcao == '4':
-            break
-        else:
-            print("Opção inválida! Tente novamente.")
 
 # Listar produtos (incluindo vencidos)
 def ListarProdutos():
@@ -205,62 +70,6 @@ def ListarProdutos():
     for i, produto in enumerate(lista_produtos, 1):
         print(f"[{i}] - {produto}")
 
-    print('---' * 20)
-
-
-# Remover produto pelo índice ou nome
-def RemoverProduto():
-    print('---' * 20)
-    ListarProdutos()
-
-    try:
-        escolha = int(input("Escolha o número do produto a remover: "))
-        produto = lista_produtos[escolha - 1]
-        # Confirmação de remoção
-        confirmar = input(f"Você tem certeza que deseja remover o produto '{produto.nome}'? [s/n]: ").upper()
-        if confirmar != 'S':
-            print("Remoção cancelada.")
-            return
-        #Remove o produto da lista
-        lista_produtos.remove(produto)
-        print(f"Produto {produto.nome} removido com sucesso!")
-    except (IndexError, ValueError):
-        print("Opção inválida. Tente novamente.")
-    
-    print('---' * 20)
-
-
-# Editar um produto
-def EditarProduto():
-    print('---' * 20)
-    ListarProdutos()
-
-    try:
-        escolha = int(input("Escolha o número do produto para editar: "))
-        produto = lista_produtos[escolha - 1]
-        
-        print(f"Editando produto: {produto}")
-        
-        nome = input(f"Nome do produto: (atualmente '{produto.nome}'): ")
-        preco = float(input(f"Novo preço (atualmente R${produto.preco}): "))
-        quantidade = int(input(f"Nova quantidade (atualmente {produto.quantidade}): "))
-        validade = input(f"Nova validade (atualmente {produto.validade}) (dd/mm/aaaa): ")
-
-        try:
-            validade = datetime.strptime(validade, "%d/%m/%Y").date()
-        except ValueError:
-            print("Data inválida! Produto não editado.")
-            return
-
-        produto.nome = nome if nome else produto.nome
-        produto.preco = preco if preco >= 0 else produto.preco
-        produto.quantidade = max(quantidade, 0) if quantidade >= 0 else produto.quantidade
-        produto.validade = validade if validade >= date.today() else produto.validade
-
-        print(f"Produto {produto.nome} editado com sucesso!")
-    except (IndexError, ValueError):
-        print("Opção inválida. Tente novamente.")
-    
     print('---' * 20)
 
 
@@ -354,7 +163,7 @@ def FinalizarOuCancelarCompra():
         print("[1] Confirmar venda")
         print("[2] Cancelar venda")
         decisao = input("Digite sua escolha: ")
-
+    
         if decisao == '1':
             FinalizarCompra()
             break
@@ -385,17 +194,15 @@ def CancelarCompra():
     print("Compra cancelada e produtos devolvidos ao estoque com sucesso!")
 
 
-# Produtos pré-cadastrados
-lista_produtos.append(Produto("Arroz 5kg", 25.90, 10, "30/12/2025"))
-lista_produtos.append(Produto("Feijão 1kg", 8.50, 15, "15/01/2026"))
-lista_produtos.append(Produto("Macarrão 500g", 4.20, 20, "20/11/2025"))
-lista_produtos.append(Produto("Óleo de Soja 900ml", 6.80, 12, "10/10/2025"))
-lista_produtos.append(Produto("Café 500g", 16.75, 8, "05/06/2026"))
+# Produtos pré-cadastrados para realizar os testes necessários
+lista_produtos.append(Produto("Arroz 5kg", 25.90, 10))
+lista_produtos.append(Produto("Feijão 1kg", 8.50, 15))
+lista_produtos.append(Produto("Macarrão 500g", 4.20, 20))
+lista_produtos.append(Produto("Óleo de Soja 900ml", 6.80, 12))
+lista_produtos.append(Produto("Café 500g", 16.75, 8))
 
 
-#####Loop principal essencial do sistema######
-#Ele deve ficar no final do código, após todas as definições de funções e classes.
-#O loop principal deve ser o último bloco de código a ser executado.
+# Loop principal do sistema onde os menus irão rodar até que a compra seja finalizada
 while True:
     print('=-=' * 20)
     menu()
@@ -411,11 +218,9 @@ while True:
         ComprarProduto()
     elif resposta == 2:
         CadastroProduto()
-    elif resposta == 3:
-        GerenciarEstoque()
+    #elif resposta == 3:
+        # CSV
     elif resposta == 4:
-        ImportarVendasCSV()
-    elif resposta == 5:
         print('Volte sempre!')
         break
     else:
