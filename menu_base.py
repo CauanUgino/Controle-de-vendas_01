@@ -8,7 +8,6 @@ import csv
 lista_produtos = []
 carrinho_de_compras = []
 
-
 # Classe Produto
 class Produto:
     def __init__(self, nome, preco, quantidade,validade):
