@@ -8,15 +8,22 @@ import csv
 lista_produtos = []
 carrinho_de_compras = []
 
-
 # Classe Produto
 class Produto:
     def __init__(self, nome, preco, quantidade,validade):
         self.nome = nome
         self.preco = preco
         self.quantidade = max(quantidade, 0)  # Garante que a quantidade não seja negativa
-        self.validade = validade # Adicionando a data de validade do produto
-        self.data_cadastro = date.today() # Data de cadastro do produto
+        if isinstance(validade, str):
+            try:
+                self.validade = datetime.strptime(validade, "%d/%m/%Y").date()
+            except ValueError:
+                print(f"Data de validade inválida para o produto {nome}. Produto não cadastrado.")
+                raise ValueError("Data de validade inválida.")
+        else:
+            self.validade = validade  # já é datetime.date
+
+        self.data_cadastro = date.today()
 
     def __str__(self):
         return (f"{self.nome} - R$ {self.preco:.2f} | Estoque: {self.quantidade} | "
@@ -126,7 +133,7 @@ def ImportarVendasCSV():
                     # Subtrai do estoque
                     produto.quantidade -= quantidade
                     vendas_importadas += 1
-                    print(f" Venda registrada: {nome} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
+                    print(f" Venda registrada: {nome} | Preço unitário: R$ {preco:.2f} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
 
                 except Exception as e:
                     print(f"Erro ao importar linha: {linha} -> {e}")
