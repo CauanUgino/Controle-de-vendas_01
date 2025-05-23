@@ -17,8 +17,8 @@ Este é o sistema de gerenciamento de estoque e vendas em Python.
 
 1. Clone este repositório:
 ```bash
-git clone https://github.com/CauanUgino/controle-de-vendas.git
-cd controle-de-vendas
+git clone https://github.com/CauanUgino/controle-de-vendas.git](https://github.com/CauanUgino/Controle-de-vendas_01.git
+cd controle-de-venda
 ```
 
 2. Execute o script principal:
