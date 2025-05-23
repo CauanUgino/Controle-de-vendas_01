@@ -485,10 +485,10 @@ def ComprarProduto():
             print(f'{i[0]} | Preço: R${i[1]:.2f} | Quantidade: {i[2]}')
         print('---' * 20)
 
-        if input('Deseja realizar outra venda? [s/n]: ').upper() == 'N':
+        if input('Deseja adicionar outro produto ao carrinho? [s/n]: ').upper() == 'N':
             if not carrinho_de_compras:
                 print("Seu carrinho está vazio.")
-                if input("Deseja tentar comprar novamente? [s/n]: ").upper() == 'S':
+                if input("Deseja cadastrar uma nova venda? [s/n]: ").upper() == 'S':
                     ComprarProduto()
             else:
                 FinalizarOuCancelarCompra()
