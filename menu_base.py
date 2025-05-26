@@ -141,6 +141,13 @@ def ImportarVendasCSV():
 
                     # Subtrai do estoque
                     produto.quantidade -= quantidade
+                    venda = Venda(produto, quantidade, data_venda)
+                    lista_vendas.append(venda)
+                    # Atualiza o registro de vendas
+                    if nome in registro_vendas:
+                        registro_vendas[nome] += quantidade
+                    else:
+                        registro_vendas[nome] = quantidade
                     vendas_importadas += 1
                     print(f" Venda registrada: {nome} | Preço unitário: R$ {preco:.2f} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
 
