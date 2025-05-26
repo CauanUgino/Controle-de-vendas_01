@@ -1,0 +1,8 @@
+guia de commit:
+
+git clone https://github.com/CauanUgino/Controle-de-vendas_01.git
+cd Controle-de-vendas_01
+git checkout Nome da user story
+git add.
+git commit -m "Mensagem para o commit"
+git push origin nome da user story
