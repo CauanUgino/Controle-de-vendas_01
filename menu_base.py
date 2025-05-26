@@ -512,6 +512,9 @@ def ComprarProduto():
         quantidade_desejada = int(input('Digite a quantidade que deseja: '))
         if quantidade_desejada > produto_escolhido.quantidade:
             print(f"Quantidade indisponível. Só temos {produto_escolhido.quantidade} unidade(s) em estoque.")
+        # Verifica se a quantidade desejada é válida
+        elif quantidade_desejada <= 0:
+            print("Quantidade inválida!")
         else:
             # Adiciona o produto ao carrinho de compras
             produto_escolhido.quantidade -= quantidade_desejada
