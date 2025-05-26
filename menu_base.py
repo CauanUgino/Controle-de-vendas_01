@@ -196,7 +196,8 @@ def GerenciarEstoque():
         print("[3] - Editar produto")
         print("[4] - Produto mais vendido")
         print("[5] - Relatório de vendas por data")
-        print("[6] - Voltar ao menu principal")
+        print("[6] - Relatório de vendas totais")
+        print("[7] - Voltar ao menu principal")
         opcao = input("Escolha uma opção: ")
 
         if opcao == '1':
@@ -213,11 +214,45 @@ def GerenciarEstoque():
 
         elif opcao == '5':
             ProdutoMaisVendidoPordata()
-
+            
         elif opcao == '6':
+            GerarRelatorioVendasTotais()
+
+        elif opcao == '7':
             break
         else:
             print("Opção inválida! Tente novamente.")
+
+# Função para gerar o relatório de vendas totais
+def GerarRelatorioVendasTotais():
+    print("\n--- Relatório de Vendas Totais ---")
+    
+    if not lista_vendas:
+        print("Nenhuma venda registrada ainda.")
+        return
+    
+    total_vendas = 0
+    total_produtos_vendidos = 0
+    total_unidades_vendidas = 0
+    
+    for venda in lista_vendas:
+        subtotal = venda.preco * venda.quantidade
+        total_vendas += subtotal
+        total_produtos_vendidos += 1
+        total_unidades_vendidas += venda.quantidade
+    
+    print(f"Total de vendas registradas: {len(lista_vendas)}")
+    print(f"Total de produtos vendidos: {total_produtos_vendidos}")
+    print(f"Total de unidades vendidas: {total_unidades_vendidas}")
+    print(f"Faturamento total: R$ {total_vendas:.2f}")
+    
+    # Gerar arquivo CSV
+    nome_arquivo = f"relatorio_vendas_totais_{date.today().strftime('%d-%m-%Y')}.csv"
+    with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
+        escritor = csv.writer(arquivo_csv)
+        escritor.writerow(['Total de vendas registradas', 'Total de produtos vendidos', 'Total de unidades vendidas', 'Faturamento total'])
+        escritor.writerow([len(lista_vendas), total_produtos_vendidos, total_unidades_vendidas, f"{total_vendas:.2f}"])
+    print(f"\nRelatório CSV gerado com sucesso: {nome_arquivo}")
 
 
 # Função para relatório de produtos mais vendidos por data
