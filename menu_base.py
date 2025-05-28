@@ -65,7 +65,8 @@ def menu():
 [2] - Cadastrar Novo Produto
 [3] - Gerenciar o estoque
 [4] - Importar produtos de um arquivo CSV
-[5] - Sair do sistema''')
+[5] - Relatórios         
+[6] - Sair do sistema''')
     
 def ImportarVendasCSV():
     caminho = input("Digite o caminho completo do arquivo CSV de vendas: ").strip()
@@ -190,6 +191,30 @@ def CadastroProduto():
     print(f"Validade: {novo_produto.validade}")
 
 
+#Relatórios
+def Relatorios():
+   while True:
+        print('---' * 20) 
+        print("[1] - Produto mais vendido")
+        print("[2] - Relatório de vendas por data")
+        print("[3] - Relatório de vendas totais")
+        print("[4] - Voltar ao menu principal")
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == '1':
+            ProdutoMaisVendido()
+
+        elif opcao == '2':
+            ProdutoMaisVendidoPordata()
+            
+        elif opcao == '3':
+            GerarRelatorioVendasTotais()
+
+        elif opcao == '4':
+            break
+        else:
+            print("Opção inválida! Tente novamente.")
+
 # Gerenciar o estoque (Listar, Remover e Editar)
 def GerenciarEstoque():
     while True:
@@ -201,10 +226,7 @@ def GerenciarEstoque():
         print("[1] - Listar produtos")
         print("[2] - Remover produto")
         print("[3] - Editar produto")
-        print("[4] - Produto mais vendido")
-        print("[5] - Relatório de vendas por data")
-        print("[6] - Relatório de vendas totais")
-        print("[7] - Voltar ao menu principal")
+        print("[4] - Voltar ao menu principal")
         opcao = input("Escolha uma opção: ")
 
         if opcao == '1':
@@ -217,15 +239,6 @@ def GerenciarEstoque():
             EditarProduto()
 
         elif opcao == '4':
-            ProdutoMaisVendido()
-
-        elif opcao == '5':
-            ProdutoMaisVendidoPordata()
-            
-        elif opcao == '6':
-            GerarRelatorioVendasTotais()
-
-        elif opcao == '7':
             break
         else:
             print("Opção inválida! Tente novamente.")
@@ -653,6 +666,8 @@ while True:
     elif resposta == 4:
         ImportarVendasCSV()
     elif resposta == 5:
+        Relatorios()
+    elif resposta == 6:
         print('Saindo do sistema. Até logo!')
         break
     else:
