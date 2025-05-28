@@ -190,6 +190,12 @@ def CadastroProduto():
     print(f"Data de cadastro: {novo_produto.data_cadastro}")
     print(f"Validade: {novo_produto.validade}")
 
+#Registro de log
+def registrar_log(nome_relatorio, usuario):
+    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    log_entry = f"Relatório: {nome_relatorio} | Usuário: {usuario} | Data e Hora: {data_hora}\n"
+    with open("relatorios_gerados.log", "a", encoding="utf-8") as log_file:
+        log_file.write(log_entry)
 
 #Relatórios
 def Relatorios():
@@ -274,6 +280,9 @@ def GerarRelatorioVendasTotais():
         escritor.writerow([len(lista_vendas), total_produtos_vendidos, total_unidades_vendidas, f"{total_vendas:.2f}"])
     print(f"\nRelatório CSV gerado com sucesso: {nome_arquivo}")
 
+    # Registrar log
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
 
 # Função para relatório de produtos mais vendidos por data
 def ProdutoMaisVendidoPordata():
@@ -354,6 +363,9 @@ def ProdutoMaisVendidoPordata():
         escritor.writerow(['', '', '', 'Total Geral', f"{total_vendas:.2f}"])
     print(f"Relatório CSV gerado com sucesso: {nome_arquivo}")
 
+    # Registrar log
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
 
 
 def ProdutoMaisVendido():
