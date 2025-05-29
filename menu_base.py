@@ -686,12 +686,14 @@ def FinalizarCompra():
 
     # Adiciona a data e hora da compra
     data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
+    #Adiciona o nome do vendedor a nota 
     while True:
         nome_vendedor = input('Digite o nome do vendedor (ou deixe em branco): ').strip()
         if nome_vendedor == "":
+            #Se apertado o espaço ele exbirá esse mensagem abaixo
             nota.append("Vendedor: Não informado\n")
             break
+        # Não permite que seja passado número ou simbolos como parametros do nome
         elif re.fullmatch(r"[A-Za-zÀ-ÿ\s]+", nome_vendedor):
             nota.append(f"Vendedor: {nome_vendedor}\n")
             break
