@@ -3,6 +3,7 @@
 from datetime import datetime, date
 from datetime import timedelta
 import csv
+import re
 
 # Listas para armazenar os produtos e as compras
 lista_produtos = []
@@ -11,11 +12,12 @@ lista_vendas = []
 registro_vendas = {}
     
 class Venda:
-    def __init__(self, produto, quantidade, data_venda):
+    def __init__(self, produto, quantidade, data_venda, vendedor=None):
         self.produto = produto  # objeto Produto
         self.quantidade = quantidade
         self.data_venda = data_venda  # datetime.date
         self.preco = produto.preco
+        self.vendedor = vendedor  # opcional, pode ser None
 
 # Classe Produto
 class Produto:
@@ -139,18 +141,28 @@ def ImportarVendasCSV():
                     if quantidade > produto.quantidade:
                         print(f" Estoque insuficiente para {nome} (pedido: {quantidade}, disponível: {produto.quantidade})")
                         continue
-
+                    
+                    vendedor = linha.get('vendedor', '').strip() or None
+                   
                     # Subtrai do estoque
                     produto.quantidade -= quantidade
-                    venda = Venda(produto, quantidade, data_venda)
+                    venda = Venda(produto, quantidade, data_venda, vendedor=vendedor)
                     lista_vendas.append(venda)
                     # Atualiza o registro de vendas
                     if nome in registro_vendas:
                         registro_vendas[nome] += quantidade
                     else:
                         registro_vendas[nome] = quantidade
-                    vendas_importadas += 1
+                    
                     print(f" Venda registrada: {nome} | Preço unitário: R$ {preco:.2f} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
+
+                    if vendedor:
+                        print(f"| Vendedor: {vendedor}")
+                    else:
+                        print("| Vendedor: Não informado")
+                    
+                    vendas_importadas += 1
+
 
                 except Exception as e:
                     print(f"Erro ao importar linha: {linha} -> {e}")
@@ -300,7 +312,25 @@ def GerarRelatorioVendasTotais():
     nome_arquivo = f"relatorio_vendas_totais_{date.today().strftime('%d-%m-%Y')}.csv"
     with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
         escritor = csv.writer(arquivo_csv)
-        escritor.writerow(['Total de vendas registradas', 'Total de produtos vendidos', 'Total de unidades vendidas', 'Faturamento total'])
+
+        escritor.writerow([
+        'Produto',
+        'Preço unitário',
+        'Quantidade',
+        'Data da Venda',
+        'Subtotal',
+        'Vendedor'
+    ])
+        for venda in lista_vendas:
+            escritor.writerow([
+            venda.produto.nome,
+            f"{venda.preco:.2f}",
+            venda.quantidade,
+            venda.data_venda.strftime('%d/%m/%Y'),
+            f"{venda.preco * venda.quantidade:.2f}",
+            venda.vendedor if venda.vendedor else "Não informado"
+        ])
+
         escritor.writerow([len(lista_vendas), total_produtos_vendidos, total_unidades_vendidas, f"{total_vendas:.2f}"])
     print(f"\nRelatório CSV gerado com sucesso: {nome_arquivo}")
 
@@ -425,16 +455,11 @@ def RelatorioAgrupado():
 
     # Seção 1: Produto Mais Vendido
     print("\n🥇 PRODUTO MAIS VENDIDO (GERAL)")
-    # Seção 1: Produto Mais Vendido
     if not registro_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
-        # Determina o produto mais vendido
         produto_mais_vendido = max(registro_vendas, key=registro_vendas.get)
-        # Obtém a quantidade total vendida do produto mais vendido
-        #   Seção 1: Produto Mais Vendido
         quantidade_mais_vendida = registro_vendas[produto_mais_vendido]
-        # Exibe o produto mais vendido e a quantidade
         print(f"- Produto mais vendido: {produto_mais_vendido}")
         print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades")
         print("\n📦 Ranking de vendas:")
@@ -505,7 +530,7 @@ def RemoverProduto():
         # Confirmação de remoção
         confirmar = input(f"Você tem certeza que deseja remover o produto '{produto.nome}'? [s/n]: ").upper()
         if confirmar != 'S':
-            print("Remoção cancelada.")
+            print("Operação cancelada.")
             return
         #Remove o produto da lista
         lista_produtos.remove(produto)
@@ -536,6 +561,12 @@ def EditarProduto():
         # Se o usuário não digitar nada, mantém o valor atual
         # Se o preço for negativo, mantém o valor atual
         nome = input(f"Nome do produto: (atualmente '{produto.nome}'): ").strip()
+        while nome and not re.fullmatch(r"[A-Za-zÀ-ÿ0-9 ]+", nome): 
+            print("Nome inválido! O nome do produto não pode conter apenas números. Por favor, digite um nome válido.")
+            nome = input(f"Nome do produto: (atualmente '{produto.nome}'): ").strip()
+            if not nome:
+                print("Nome não pode ser vazio. Produto não editado.")
+                return
 
         if nome:
             if not nome.isdigit():
@@ -599,6 +630,12 @@ def ComprarProduto():
         try:
             # Solicita o número do produto a ser comprado
             resposta = int(input('Digite o número do produto que deseja cadastrar a venda: '))
+            if not (1 <= resposta <= len(lista_produtos)):
+                print("Número inválido! Tente novamente.")
+                continue
+            if resposta ==0:
+                print("Operação invalida! Tente novamente.")
+                return
             produto_escolhido = lista_produtos[resposta - 1]
         except (IndexError, ValueError):
             print("Opção inválida. Tente novamente.")
@@ -617,6 +654,7 @@ def ComprarProduto():
         # Verifica se a quantidade desejada é válida
         elif quantidade_desejada <= 0:
             print("Quantidade inválida!")
+
         else:
             # Adiciona o produto ao carrinho de compras
             produto_escolhido.quantidade -= quantidade_desejada
@@ -643,15 +681,24 @@ def ComprarProduto():
 
 # Finalização da compra
 def FinalizarCompra():
-    print("\nCompra finalizada com sucesso!")
-    print("Resumo da compra:")
+    
     # Verifica se o carrinho de compras está vazio
     total = 0
     # Cria a nota fiscal
     nota= []
 
+
     # Adiciona a data e hora da compra
-    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")   
+    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
+
+    nome_vendedor = input('Digite o nome do vendedor(ou deixe em branco): ').strip()
+    if nome_vendedor:
+        nota.append(f"Vendedor: {nome_vendedor}\n")
+    else:
+        nota.append("Vendedor: Não informado\n")
+
+    print("\nCompra finalizada com sucesso!")
+    print("Resumo da compra:")
     # Adiciona a data e hora da compra na nota 
     nota.append(f"Data da compra: {data_hora}\n")
     nota.append("Itens comprados:")
@@ -703,6 +750,8 @@ def FinalizarOuCancelarCompra():
                 CancelarCompra()
             else:
                 print("Compra não cancelada.")
+                #Erro aqui
+                return 'continuar'
             CancelarCompra()
             break
         else:
