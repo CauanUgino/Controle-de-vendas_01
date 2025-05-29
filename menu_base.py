@@ -681,27 +681,29 @@ def ComprarProduto():
 
 # Finalização da compra
 def FinalizarCompra():
-    
-    # Verifica se o carrinho de compras está vazio
     total = 0
-    # Cria a nota fiscal
-    nota= []
-
+    nota = []
 
     # Adiciona a data e hora da compra
-    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S") 
+    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    nome_vendedor = input('Digite o nome do vendedor(ou deixe em branco): ').strip()
-    if nome_vendedor:
-        nota.append(f"Vendedor: {nome_vendedor}\n")
-    else:
-        nota.append("Vendedor: Não informado\n")
+    while True:
+        nome_vendedor = input('Digite o nome do vendedor (ou deixe em branco): ').strip()
+        if nome_vendedor == "":
+            nota.append("Vendedor: Não informado\n")
+            break
+        elif re.fullmatch(r"[A-Za-zÀ-ÿ\s]+", nome_vendedor):
+            nota.append(f"Vendedor: {nome_vendedor}\n")
+            break
+        else:
+            print("Nome inválido! Use apenas letras e espaços.")
 
     print("\nCompra finalizada com sucesso!")
     print("Resumo da compra:")
-    # Adiciona a data e hora da compra na nota 
+
     nota.append(f"Data da compra: {data_hora}\n")
     nota.append("Itens comprados:")
+
     
     for nome, preco, qtd in carrinho_de_compras:
         subtotal = preco * qtd
