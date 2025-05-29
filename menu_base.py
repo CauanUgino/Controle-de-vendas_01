@@ -166,37 +166,55 @@ def ImportarVendasCSV():
 
 # Cadastro de novos produtos
 def CadastroProduto():
-    nome_produto = input('Digite o nome do produto: ')
-    preco_produto = float(input('Digite o preço do produto: '))
-    quantidade = int(input("Digite a quantidade disponível: "))
-    validade = str (input("Digite a data de validade do produto (dd/mm/aaaa): "))
+    while True: # Loop para garantir que o nome seja válido
+        nome_produto = str(input('Digite o nome do produto: ')).strip()
 
-    # Verifica se o produto está na validade
-    try:
-        validade = datetime.strptime(validade, "%d/%m/%Y").date()
-    except ValueError:
-        print("Data inválida! Produto não cadastrado.")
-        return
+        # Verifica se o nome não está vazio E se não contém nenhum dígito
+        if not nome_produto:
+            print("O nome do produto não pode ser vazio. Por favor, digite um nome válido.")
+        elif any(char.isdigit() for char in nome_produto):
+            print("Nome inválido! O nome do produto não pode conter números. Por favor, digite um nome válido.")
+        else:
+            # Se o nome for válido, sai do loop
+            break
 
-    if validade < date.today():
-        print("Produto vencido! Não é pode cadastrar no estoque.")
-        return
+    while True: # Loop para garantir que o preço seja válido
+        try:
+            preco_produto = float(input('Digite o preço do produto: '))
+            if preco_produto < 0:
+                print("Preço inválido! O preço não pode ser negativo.")
+            else:
+                break # Sai do loop se o preço for válido
+        except ValueError:
+            print("Entrada inválida para o preço. Por favor, digite apenas números.")
 
-    novo_produto = Produto(nome_produto, preco_produto, quantidade, validade)
+    while True: # Loop para garantir que a quantidade seja válida
+        try:
+            quantidade = int(input("Digite a quantidade disponível: "))
+            if quantidade < 0:
+                print("Quantidade inválida! A quantidade não pode ser negativa.")
+            else:
+                break # Sai do loop se a quantidade for válida
+        except ValueError:
+            print("Entrada inválida para a quantidade. Por favor, digite apenas números inteiros.")
+
+    while True: # Loop para garantir que a validade seja válida
+        validade_str = input("Digite a data de validade do produto (dd/mm/aaaa): ")
+        try:
+            validade_obj = datetime.strptime(validade_str, "%d/%m/%Y").date()
+            if validade_obj < date.today():
+                print("Data de validade inválida! O produto já está vencido. Não pode cadastrar.")
+            else:
+                break # Sai do loop se a validade for válida e não estiver vencida
+        except ValueError:
+            print("Data inválida! Por favor, digite a data no formato dd/mm/aaaa.")
+
+    novo_produto = Produto(nome_produto, preco_produto, quantidade, validade_obj)
     lista_produtos.append(novo_produto)
-
-    print('---' * 20)
-    print(f'Produto "{nome_produto}" cadastrado com sucesso por R${preco_produto:.2f}!')
-    print(f"Data de cadastro: {novo_produto.data_cadastro}")
-    print(f"Validade: {novo_produto.validade}")
-
-#Registro de log
-def registrar_log(nome_relatorio, usuario):
-    data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    log_entry = f"Relatório: {nome_relatorio} | Usuário: {usuario} | Data e Hora: {data_hora}\n"
-    with open("relatorios_gerados.log", "a", encoding="utf-8") as log_file:
-        log_file.write(log_entry)
-
+    print(f"\nProduto: '{nome_produto}' cadastrado com sucesso!")
+    print(f"Preço: R${preco_produto:.2f} | Quantidade: {quantidade} | Validade: {validade_obj.strftime('%d/%m/%Y')}")
+   
+   
 #Relatórios
 def Relatorios():
    while True:
@@ -288,7 +306,8 @@ def GerarRelatorioVendasTotais():
 
     # Registrar log
     usuario = input("Digite o seu nome: ")
-    registrar_log(nome_arquivo, usuario)
+    registrar_log=(nome_arquivo, usuario)
+    print(f"Relatório de vendas totais gerado com sucesso por {usuario}!")
 
 # Função para relatório de produtos mais vendidos por data
 def ProdutoMaisVendidoPordata():
@@ -371,7 +390,8 @@ def ProdutoMaisVendidoPordata():
 
     # Registrar log
     usuario = input("Digite o seu nome: ")
-    registrar_log(nome_arquivo, usuario)
+    registrar_log=(nome_arquivo, usuario)
+    print(f"Relatório de vendas por {filtro_nome} gerado com sucesso!")
 
 
 def ProdutoMaisVendido():
@@ -405,11 +425,16 @@ def RelatorioAgrupado():
 
     # Seção 1: Produto Mais Vendido
     print("\n🥇 PRODUTO MAIS VENDIDO (GERAL)")
+    # Seção 1: Produto Mais Vendido
     if not registro_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
+        # Determina o produto mais vendido
         produto_mais_vendido = max(registro_vendas, key=registro_vendas.get)
+        # Obtém a quantidade total vendida do produto mais vendido
+        #   Seção 1: Produto Mais Vendido
         quantidade_mais_vendida = registro_vendas[produto_mais_vendido]
+        # Exibe o produto mais vendido e a quantidade
         print(f"- Produto mais vendido: {produto_mais_vendido}")
         print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades")
         print("\n📦 Ranking de vendas:")
@@ -685,6 +710,7 @@ def FinalizarOuCancelarCompra():
 
 
 # Cancelamento de compra
+## Cancela a compra e devolve os produtos ao estoque
 def CancelarCompra():
     if not carrinho_de_compras:
         print("Seu carrinho está vazio.")
@@ -737,3 +763,5 @@ while True:
     else:
         print("Opção inválida. Tente novamente.")
 
+print('=-=' * 20)
+print("Obrigado por usar o sistema de vendas!")
