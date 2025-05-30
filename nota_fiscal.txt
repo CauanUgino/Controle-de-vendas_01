@@ -1,0 +1,10 @@
+NOTA FISCAL
+========================================
+Data da compra: 26/05/2025 12:29:35
+
+Itens comprados:
+Feijão 1kg | Preço: R$8.50 | Quantidade: -5 | Subtotal: R$-42.50
+
+Total a pagar: R$-42.50
+========================================
+Obrigado pela sua compra!
