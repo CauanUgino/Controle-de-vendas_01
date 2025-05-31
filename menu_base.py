@@ -761,10 +761,7 @@ def ComprarProduto():
                     resultado = FinalizarOuCancelarCompra()
                     if resultado == 'continuar':
                         continue  # Volta ao início do loop principal
-                break
-            else:
-                break
-
+                    return
 
 # Finalização da compra
 def FinalizarCompra():
