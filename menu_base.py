@@ -234,8 +234,9 @@ def Relatorios():
         print("[1] - Produto mais vendido")
         print("[2] - Relatório de vendas por data")
         print("[3] - Relatório de vendas totais")
-        print("[4] - Relatório agrupado para melhor visualização")
-        print("[5] - Voltar ao menu principal")
+        print("[4] - Relatório de vendas p/ produto")
+        print("[5] - Relatório agrupado para melhor visualização")
+        print("[6] - Voltar ao menu principal")
 
         opcao = input("Escolha uma opção: ")
 
@@ -249,9 +250,12 @@ def Relatorios():
             GerarRelatorioVendasTotais()
 
         elif opcao == '4':
-            RelatorioAgrupado()
+            RelatorioVendasPorProduto()
 
         elif opcao== '5':
+            RelatorioAgrupado()
+        
+        elif opcao== '6':    
             print("Voltando ao menu principal...")
             break
         else:
@@ -455,19 +459,32 @@ def RelatorioAgrupado():
 
     # Seção 1: Produto Mais Vendido
     print("\n🥇 PRODUTO MAIS VENDIDO (GERAL)")
-    if not registro_vendas:
+    if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
-        produto_mais_vendido = max(registro_vendas, key=registro_vendas.get)
-        quantidade_mais_vendida = registro_vendas[produto_mais_vendido]
+        # Agrupar vendas por produto: quantidade e total em reais
+        vendas_por_produto = {}
+        for venda in lista_vendas:
+            nome = venda.produto.nome
+            if nome not in vendas_por_produto:
+                vendas_por_produto[nome] = {"quantidade": 0, "total_reais": 0.0}
+            vendas_por_produto[nome]["quantidade"] += venda.quantidade
+            vendas_por_produto[nome]["total_reais"] += venda.quantidade * venda.preco
+
+        produto_mais_vendido = max(vendas_por_produto, key=lambda k: vendas_por_produto[k]["quantidade"])
+        quantidade_mais_vendida = vendas_por_produto[produto_mais_vendido]["quantidade"]
+
         print(f"- Produto mais vendido: {produto_mais_vendido}")
-        print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades")
+        print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidade(s)")
+
+        # Ranking de vendas por quantidade + valor total vendido
         print("\n📦 Ranking de vendas:")
-        produtos_ordenados = sorted(registro_vendas.items(), key=lambda item: item[1], reverse=True)
-        for idx, (produto, quantidade) in enumerate(produtos_ordenados, 1):
-            print(f"{idx}º - {produto}: {quantidade} unidade(s)")
-        print(f"\n- Total de produtos distintos vendidos: {len(registro_vendas)}")
-        print(f"- Total geral de unidades vendidas: {sum(registro_vendas.values())}")
+        produtos_ordenados = sorted(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"], reverse=True)
+        for idx, (produto, dados) in enumerate(produtos_ordenados, 1):
+            print(f"{idx}º - {produto}: {dados['quantidade']} unidade(s) - R$ {dados['total_reais']:.2f}")
+
+        print(f"\n- Total de produtos distintos vendidos: {len(vendas_por_produto)}")
+        print(f"- Total geral de unidades vendidas: {sum(d['quantidade'] for d in vendas_por_produto.values())}")
 
     # Seção 2: Vendas Totais
     print("\n" + "-"*60)
@@ -476,22 +493,65 @@ def RelatorioAgrupado():
     if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
-        total_vendas = 0
-        total_produtos_vendidos = 0
-        total_unidades_vendidas = 0
-        for venda in lista_vendas:
-            subtotal = venda.preco * venda.quantidade
-            total_vendas += subtotal
-            total_produtos_vendidos += 1
-            total_unidades_vendidas += venda.quantidade
-        print(f"- Total de vendas registradas: {len(lista_vendas)}")
-        print(f"- Total de produtos vendidos: {total_produtos_vendidos}")
+        total_faturamento = sum(venda.preco * venda.quantidade for venda in lista_vendas)
+        total_vendas = len(lista_vendas)
+        total_unidades_vendidas = sum(venda.quantidade for venda in lista_vendas)
+        produtos_distintos = set(venda.produto.nome for venda in lista_vendas)
+
+        print(f"- Total de vendas registradas: {total_vendas}")
+        print(f"- Total de produtos distintos vendidos: {len(produtos_distintos)}")
         print(f"- Total de unidades vendidas: {total_unidades_vendidas}")
-        print(f"- Faturamento total: R$ {total_vendas:.2f}")
+        print(f"- Faturamento total: R$ {total_faturamento:.2f}")
 
     print("\n📁 Os relatórios detalhados por data ainda devem ser gerados separadamente.")
     print("Use a opção [2] do menu de relatórios para aplicar filtros por dia/semana/mês.")
     print("="*60)
+
+def RelatorioVendasPorProduto():
+    print("\nRelatório de vendas por produto:")
+    
+    if not lista_vendas:
+        print("Nenhuma venda registrada ainda.")
+        return
+
+    vendas_por_produto = {}
+    
+    # Agrupa as vendas por nome do produto
+    for venda in lista_vendas:
+        nome_produto = venda.produto.nome
+        if nome_produto not in vendas_por_produto:
+            vendas_por_produto[nome_produto] = {
+                "quantidade": 0,
+                "total_reais": 0.0,
+                "preco_unitario": venda.produto.preco
+            }
+        vendas_por_produto[nome_produto]["quantidade"] += venda.quantidade
+        vendas_por_produto[nome_produto]["total_reais"] += venda.quantidade * venda.produto.preco
+
+    # Determina o produto mais vendido
+    produto_mais_vendido = max(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"])
+    nome_mais_vendido = produto_mais_vendido[0]
+    quantidade_mais_vendida = produto_mais_vendido[1]["quantidade"]
+
+    print(f"- Produto mais vendido: {nome_mais_vendido}")
+    print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades\n")
+
+    print("📦 Ranking de vendas (por quantidade):")
+    ranking = sorted(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"], reverse=True)
+
+    total_geral_unidades = 0
+    total_geral_reais = 0.0
+
+    for idx, (produto, dados) in enumerate(ranking, 1):
+        qtd = dados["quantidade"]
+        total = dados["total_reais"]
+        total_geral_unidades += qtd
+        total_geral_reais += total
+        print(f"{idx}º - {produto}: {qtd} unidade(s) - R$ {total:.2f}")
+
+    print(f"\n- Total de produtos distintos vendidos: {len(vendas_por_produto)}")
+    print(f"- Total geral de unidades vendidas: {total_geral_unidades}")
+    print(f"- Total geral em vendas (R$): R$ {total_geral_reais:.2f}")
 
 # Listar produtos (incluindo vencidos)
 def ListarProdutos():
