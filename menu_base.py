@@ -63,6 +63,9 @@ print('Bem-vindo ao sistema de compras!')
 
 # Menu de opções do sistema
 def menu():
+    print()
+    print("MENU PRINCIPAL!")
+    print()
     print('''[1] - Cadastrar vendas
 [2] - Cadastrar Novo Produto
 [3] - Gerenciar o estoque
@@ -178,6 +181,9 @@ def ImportarVendasCSV():
 
 # Cadastro de novos produtos
 def CadastroProduto():
+    print()
+    print("CADASTRO DE NOVO PRODUTO!")
+    print()
     while True: # Loop para garantir que o nome seja válido
         nome_produto = str(input('Digite o nome do produto: ')).strip()
 
@@ -231,6 +237,9 @@ def CadastroProduto():
 def Relatorios():
    while True:
         print('---' * 20) 
+        print()
+        print("RELATÓRIOS!")
+        print()
         print("[1] - Produto mais vendido")
         print("[2] - Relatório de vendas por data")
         print("[3] - Relatório de vendas totais")
@@ -265,6 +274,9 @@ def Relatorios():
 def GerenciarEstoque():
     while True:
         print('---' * 20)
+        print()
+        print("GERENCIAR ESTOQUE!")
+        print()
         if not lista_produtos:
             print("Nenhum produto cadastrado.")
             return
@@ -345,6 +357,7 @@ def GerarRelatorioVendasTotais():
 
 # Função para relatório de produtos mais vendidos por data
 def ProdutoMaisVendidoPordata():
+    print()
     print("\n--- Relatório de vendas ---")
     if not lista_produtos:
         print("Nenhuma venda registrada ainda.")
@@ -674,16 +687,16 @@ def EditarProduto():
     print('---' * 20)
 
 
-# Compra d produtos
+# Compra de produtos
 def ComprarProduto():
-    # Verifica se há produtos cadastrados
+    global lista_produtos, carrinho_de_compras, lista_vendas  # Se forem globais
+
     while True:
         print('---' * 20)
         if not lista_produtos:
             print("Nenhum produto cadastrado.")
             return
 
-        # Exibe os produtos cadastrados
         for i, item in enumerate(lista_produtos, 1):
             print(f"[{i}] -> {item.nome} | R${item.preco:.2f} | Estoque: {item.quantidade}")
         print('---' * 20)
@@ -693,21 +706,17 @@ def ComprarProduto():
             if not (1 <= resposta <= len(lista_produtos)):
                 print("Número inválido! Tente novamente.")
                 continue
-
             produto_escolhido = lista_produtos[resposta - 1]
-
-        except (IndexError, ValueError):
+        except (ValueError, IndexError):
             print("Opção inválida. Tente novamente.")
             continue
 
-        # Verifica se o produto está disponível em estoque
         if produto_escolhido.quantidade == 0:
             print(f'O produto "{produto_escolhido.nome}" está sem estoque!')
             if input('Deseja comprar outro produto? [s/n]: ').strip().upper() == 'N':
-                break
+                return
             continue
 
-        # Solicita e valida a quantidade desejada
         while True:
             quantidade_input = input('Digite a quantidade que deseja: ').strip()
             if not quantidade_input.isdigit():
@@ -724,9 +733,9 @@ def ComprarProduto():
                 print(f"Quantidade indisponível. Só temos {produto_escolhido.quantidade} unidade(s) em estoque.")
                 continue
 
-            break  # Entrada válida
+            break
 
-        # Adiciona o produto ao carrinho de compras
+        # Adiciona ao carrinho
         produto_escolhido.quantidade -= quantidade_desejada
         carrinho_de_compras.append((produto_escolhido.nome, produto_escolhido.preco, quantidade_desejada))
         lista_vendas.append(Venda(produto_escolhido, quantidade_desejada, date.today()))
@@ -737,31 +746,30 @@ def ComprarProduto():
         for i in carrinho_de_compras:
             print(f'{i[0]} | Preço: R${i[1]:.2f} | Quantidade: {i[2]}')
         print('---' * 20)
-        
+
         while True:
-            continuar= input('Deseja adicionar outro produto ao carrinho? [s/n]: ').strip().upper()
-            if continuar not in ['S','N']:
-                  print("Opção inválida! Digite apenas 's' ou 'n'.")
-                  continue
-            
-            if continuar == 'N':
-                if  not carrinho_de_compras:
-                    print('Seu carrinho está vazio')
-                    while True:
-                        nova_venda = input('"Deseja cadastrar uma nova venda? [s/n]: ').strip().upper
-                        #Se a resposta for diferente de s ou n ele não aceita 
-                        if nova_venda not in ['S','N']:
-                            print("Opção inválida, Digite apenas 's' ou 'n' ")
-                            continue
-                        if nova_venda== 'S':
-                            ComprarProduto
-                        break
-    
-                else:
-                    resultado = FinalizarOuCancelarCompra()
-                    if resultado == 'continuar':
-                        continue  # Volta ao início do loop principal
+            continuar = input('Deseja adicionar outro produto ao carrinho? [s/n]: ').strip().upper()
+            if continuar not in ['S', 'N']:
+                print("Opção inválida! Digite apenas 's' ou 'n'.")
+                continue
+            break
+
+        if continuar == 'N':
+            if not carrinho_de_compras:
+                print('Seu carrinho está vazio')
+                while True:
+                    nova_venda = input('Deseja cadastrar uma nova venda? [s/n]: ').strip().upper()
+                    if nova_venda not in ['S', 'N']:
+                        print("Opção inválida. Digite apenas 's' ou 'n'.")
+                        continue
+                    if nova_venda == 'S':
+                        ComprarProduto()
                     return
+            else:
+                resultado = FinalizarOuCancelarCompra()
+                if resultado == 'continuar':
+                    continue
+                return
 
 # Finalização da compra
 def FinalizarCompra():
