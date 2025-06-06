@@ -63,6 +63,9 @@ print('Bem-vindo ao sistema de compras!')
 
 # Menu de opções do sistema
 def menu():
+    print()
+    print("MENU PRINCIPAL!")
+    print()
     print('''[1] - Cadastrar vendas
 [2] - Cadastrar Novo Produto
 [3] - Gerenciar o estoque
@@ -178,6 +181,9 @@ def ImportarVendasCSV():
 
 # Cadastro de novos produtos
 def CadastroProduto():
+    print()
+    print("CADASTRO DE NOVO PRODUTO!")
+    print()
     while True: # Loop para garantir que o nome seja válido
         nome_produto = str(input('Digite o nome do produto: ')).strip()
 
@@ -231,11 +237,15 @@ def CadastroProduto():
 def Relatorios():
    while True:
         print('---' * 20) 
+        print()
+        print("RELATÓRIOS!")
+        print()
         print("[1] - Produto mais vendido")
         print("[2] - Relatório de vendas por data")
         print("[3] - Relatório de vendas totais")
-        print("[4] - Relatório agrupado para melhor visualização")
-        print("[5] - Voltar ao menu principal")
+        print("[4] - Relatório de vendas p/ produto")
+        print("[5] - Relatório agrupado para melhor visualização")
+        print("[6] - Voltar ao menu principal")
 
         opcao = input("Escolha uma opção: ")
 
@@ -249,18 +259,29 @@ def Relatorios():
             GerarRelatorioVendasTotais()
 
         elif opcao == '4':
-            RelatorioAgrupado()
+            RelatorioVendasPorProduto()
 
         elif opcao== '5':
+            RelatorioAgrupado()
+        
+        elif opcao== '6':    
             print("Voltando ao menu principal...")
             break
         else:
             print("Opção inválida! Tente novamente.")
 
+def registrar_log(nome_arquivo, usuario):
+    with open("log_de_geracoes.txt", mode="a", encoding="utf-8") as log:
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        log.write(f"[{data_hora}] Relatório gerado: {nome_arquivo} | Usuário: {usuario}\n")
+
 # Gerenciar o estoque (Listar, Remover e Editar)
 def GerenciarEstoque():
     while True:
         print('---' * 20)
+        print()
+        print("GERENCIAR ESTOQUE!")
+        print()
         if not lista_produtos:
             print("Nenhum produto cadastrado.")
             return
@@ -341,20 +362,22 @@ def GerarRelatorioVendasTotais():
 
 # Função para relatório de produtos mais vendidos por data
 def ProdutoMaisVendidoPordata():
+    print()
     print("\n--- Relatório de vendas ---")
     if not lista_produtos:
         print("Nenhuma venda registrada ainda.")
         return
+
     print("Escolha o filtro para o relatório:")
     print("1 - Dia específico")
     print("2 - Mês específico")
     print("3 - Semana específica")
     opcao = input("Opção (1/2/3): ").strip()
-    # Verifica se a opção é válida
+
     if opcao not in ['1', '2', '3']:
         print("Opção inválida! Tente novamente.")
         return
-    
+
     if opcao == '1':
         data_str = input("Digite o dia (dd/mm/aaaa): ").strip()
         try:
@@ -386,25 +409,26 @@ def ProdutoMaisVendidoPordata():
         fim_semana = inicio_semana + timedelta(days=6)
         vendas_filtradas = [v for v in lista_vendas if inicio_semana <= v.data_venda <= fim_semana]
         filtro_nome = f"semana_{inicio_semana.strftime('%d-%m-%Y')}_a_{fim_semana.strftime('%d-%m-%Y')}"
-    else:
-        print("Opção inválida!")
-        return
+
     if not vendas_filtradas:
         print("Nenhuma venda encontrada para o período selecionado.")
         return
+
     total_vendas = 0
     print(f"\nVendas filtradas ({len(vendas_filtradas)} registro(s)):")
     for venda in vendas_filtradas:
         subtotal = venda.preco * venda.quantidade
         total_vendas += subtotal
         print(f"Produto: {venda.produto.nome} | Preço: R${venda.preco:.2f} | Quantidade: {venda.quantidade} | Data: {venda.data_venda.strftime('%d/%m/%Y')} | Subtotal: R${subtotal:.2f}")
+
     print(f"\nTotal das vendas no período: R${total_vendas:.2f}")
     print("---" * 20)
+
     # Gerar arquivo CSV
     nome_arquivo = f"relatorio_vendas_{filtro_nome}.csv"
     with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
         escritor = csv.writer(arquivo_csv)
-        escritor.writerow(['Produto', 'Preço Unitário', 'Quantidade', 'Data da Venda', 'Subtotal'])
+        escritor.writerow(['Produto', 'Preço Unitário', 'Quantidade', 'Data da Venda', 'Subtotal', 'Vendedor'])
         for venda in vendas_filtradas:
             subtotal = venda.preco * venda.quantidade
             escritor.writerow([
@@ -412,16 +436,18 @@ def ProdutoMaisVendidoPordata():
                 f"{venda.preco:.2f}",
                 venda.quantidade,
                 venda.data_venda.strftime('%d/%m/%Y'),
-                f"{subtotal:.2f}"
+                f"{subtotal:.2f}",
+                venda.vendedor if venda.vendedor else "N/A"
             ])
         escritor.writerow([])
         escritor.writerow(['', '', '', 'Total Geral', f"{total_vendas:.2f}"])
+
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
+    print(f"Relatório de vendas por {usuario} gerado com sucesso!")
+
     print(f"Relatório CSV gerado com sucesso: {nome_arquivo}")
 
-    # Registrar log
-    usuario = input("Digite o seu nome: ")
-    registrar_log=(nome_arquivo, usuario)
-    print(f"Relatório de vendas por {filtro_nome} gerado com sucesso!")
 
 
 def ProdutoMaisVendido():
@@ -455,19 +481,32 @@ def RelatorioAgrupado():
 
     # Seção 1: Produto Mais Vendido
     print("\n🥇 PRODUTO MAIS VENDIDO (GERAL)")
-    if not registro_vendas:
+    if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
-        produto_mais_vendido = max(registro_vendas, key=registro_vendas.get)
-        quantidade_mais_vendida = registro_vendas[produto_mais_vendido]
+        # Agrupar vendas por produto: quantidade e total em reais
+        vendas_por_produto = {}
+        for venda in lista_vendas:
+            nome = venda.produto.nome
+            if nome not in vendas_por_produto:
+                vendas_por_produto[nome] = {"quantidade": 0, "total_reais": 0.0}
+            vendas_por_produto[nome]["quantidade"] += venda.quantidade
+            vendas_por_produto[nome]["total_reais"] += venda.quantidade * venda.preco
+
+        produto_mais_vendido = max(vendas_por_produto, key=lambda k: vendas_por_produto[k]["quantidade"])
+        quantidade_mais_vendida = vendas_por_produto[produto_mais_vendido]["quantidade"]
+
         print(f"- Produto mais vendido: {produto_mais_vendido}")
-        print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades")
+        print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidade(s)")
+
+        # Ranking de vendas por quantidade + valor total vendido
         print("\n📦 Ranking de vendas:")
-        produtos_ordenados = sorted(registro_vendas.items(), key=lambda item: item[1], reverse=True)
-        for idx, (produto, quantidade) in enumerate(produtos_ordenados, 1):
-            print(f"{idx}º - {produto}: {quantidade} unidade(s)")
-        print(f"\n- Total de produtos distintos vendidos: {len(registro_vendas)}")
-        print(f"- Total geral de unidades vendidas: {sum(registro_vendas.values())}")
+        produtos_ordenados = sorted(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"], reverse=True)
+        for idx, (produto, dados) in enumerate(produtos_ordenados, 1):
+            print(f"{idx}º - {produto}: {dados['quantidade']} unidade(s) - R$ {dados['total_reais']:.2f}")
+
+        print(f"\n- Total de produtos distintos vendidos: {len(vendas_por_produto)}")
+        print(f"- Total geral de unidades vendidas: {sum(d['quantidade'] for d in vendas_por_produto.values())}")
 
     # Seção 2: Vendas Totais
     print("\n" + "-"*60)
@@ -476,22 +515,65 @@ def RelatorioAgrupado():
     if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
     else:
-        total_vendas = 0
-        total_produtos_vendidos = 0
-        total_unidades_vendidas = 0
-        for venda in lista_vendas:
-            subtotal = venda.preco * venda.quantidade
-            total_vendas += subtotal
-            total_produtos_vendidos += 1
-            total_unidades_vendidas += venda.quantidade
-        print(f"- Total de vendas registradas: {len(lista_vendas)}")
-        print(f"- Total de produtos vendidos: {total_produtos_vendidos}")
+        total_faturamento = sum(venda.preco * venda.quantidade for venda in lista_vendas)
+        total_vendas = len(lista_vendas)
+        total_unidades_vendidas = sum(venda.quantidade for venda in lista_vendas)
+        produtos_distintos = set(venda.produto.nome for venda in lista_vendas)
+
+        print(f"- Total de vendas registradas: {total_vendas}")
+        print(f"- Total de produtos distintos vendidos: {len(produtos_distintos)}")
         print(f"- Total de unidades vendidas: {total_unidades_vendidas}")
-        print(f"- Faturamento total: R$ {total_vendas:.2f}")
+        print(f"- Faturamento total: R$ {total_faturamento:.2f}")
 
     print("\n📁 Os relatórios detalhados por data ainda devem ser gerados separadamente.")
     print("Use a opção [2] do menu de relatórios para aplicar filtros por dia/semana/mês.")
     print("="*60)
+
+def RelatorioVendasPorProduto():
+    print("\nRelatório de vendas por produto:")
+    
+    if not lista_vendas:
+        print("Nenhuma venda registrada ainda.")
+        return
+
+    vendas_por_produto = {}
+    
+    # Agrupa as vendas por nome do produto
+    for venda in lista_vendas:
+        nome_produto = venda.produto.nome
+        if nome_produto not in vendas_por_produto:
+            vendas_por_produto[nome_produto] = {
+                "quantidade": 0,
+                "total_reais": 0.0,
+                "preco_unitario": venda.produto.preco
+            }
+        vendas_por_produto[nome_produto]["quantidade"] += venda.quantidade
+        vendas_por_produto[nome_produto]["total_reais"] += venda.quantidade * venda.produto.preco
+
+    # Determina o produto mais vendido
+    produto_mais_vendido = max(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"])
+    nome_mais_vendido = produto_mais_vendido[0]
+    quantidade_mais_vendida = produto_mais_vendido[1]["quantidade"]
+
+    print(f"- Produto mais vendido: {nome_mais_vendido}")
+    print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades\n")
+
+    print("📦 Ranking de vendas (por quantidade):")
+    ranking = sorted(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"], reverse=True)
+
+    total_geral_unidades = 0
+    total_geral_reais = 0.0
+
+    for idx, (produto, dados) in enumerate(ranking, 1):
+        qtd = dados["quantidade"]
+        total = dados["total_reais"]
+        total_geral_unidades += qtd
+        total_geral_reais += total
+        print(f"{idx}º - {produto}: {qtd} unidade(s) - R$ {total:.2f}")
+
+    print(f"\n- Total de produtos distintos vendidos: {len(vendas_por_produto)}")
+    print(f"- Total geral de unidades vendidas: {total_geral_unidades}")
+    print(f"- Total geral em vendas (R$): R$ {total_geral_reais:.2f}")
 
 # Listar produtos (incluindo vencidos)
 def ListarProdutos():
@@ -614,16 +696,16 @@ def EditarProduto():
     print('---' * 20)
 
 
-# Compra d produtos
+# Compra de produtos
 def ComprarProduto():
-    # Verifica se há produtos cadastrados
+    global lista_produtos, carrinho_de_compras, lista_vendas  # Se forem globais
+
     while True:
         print('---' * 20)
         if not lista_produtos:
             print("Nenhum produto cadastrado.")
             return
 
-        # Exibe os produtos cadastrados
         for i, item in enumerate(lista_produtos, 1):
             print(f"[{i}] -> {item.nome} | R${item.preco:.2f} | Estoque: {item.quantidade}")
         print('---' * 20)
@@ -633,21 +715,17 @@ def ComprarProduto():
             if not (1 <= resposta <= len(lista_produtos)):
                 print("Número inválido! Tente novamente.")
                 continue
-
             produto_escolhido = lista_produtos[resposta - 1]
-
-        except (IndexError, ValueError):
+        except (ValueError, IndexError):
             print("Opção inválida. Tente novamente.")
             continue
 
-        # Verifica se o produto está disponível em estoque
         if produto_escolhido.quantidade == 0:
             print(f'O produto "{produto_escolhido.nome}" está sem estoque!')
             if input('Deseja comprar outro produto? [s/n]: ').strip().upper() == 'N':
-                break
+                return
             continue
 
-        # Solicita e valida a quantidade desejada
         while True:
             quantidade_input = input('Digite a quantidade que deseja: ').strip()
             if not quantidade_input.isdigit():
@@ -664,9 +742,9 @@ def ComprarProduto():
                 print(f"Quantidade indisponível. Só temos {produto_escolhido.quantidade} unidade(s) em estoque.")
                 continue
 
-            break  # Entrada válida
+            break
 
-        # Adiciona o produto ao carrinho de compras
+        # Adiciona ao carrinho
         produto_escolhido.quantidade -= quantidade_desejada
         carrinho_de_compras.append((produto_escolhido.nome, produto_escolhido.preco, quantidade_desejada))
         lista_vendas.append(Venda(produto_escolhido, quantidade_desejada, date.today()))
@@ -677,34 +755,30 @@ def ComprarProduto():
         for i in carrinho_de_compras:
             print(f'{i[0]} | Preço: R${i[1]:.2f} | Quantidade: {i[2]}')
         print('---' * 20)
-        
-        while True:
-            continuar= input('Deseja adicionar outro produto ao carrinho? [s/n]: ').strip().upper()
-            if continuar not in ['S','N']:
-                  print("Opção inválida! Digite apenas 's' ou 'n'.")
-                  continue
-            
-            if continuar == 'N':
-                if  not carrinho_de_compras:
-                    print('Seu carrinho está vazio')
-                    while True:
-                        nova_venda = input('"Deseja cadastrar uma nova venda? [s/n]: ').strip().upper
-                        #Se a resposta for diferente de s ou n ele não aceita 
-                        if nova_venda not in ['S','N']:
-                            print("Opção inválida, Digite apenas 's' ou 'n' ")
-                            continue
-                        if nova_venda== 'S':
-                            ComprarProduto
-                        break
-    
-                else:
-                    resultado = FinalizarOuCancelarCompra()
-                    if resultado == 'continuar':
-                        continue  # Volta ao início do loop principal
-                break
-            else:
-                break
 
+        while True:
+            continuar = input('Deseja adicionar outro produto ao carrinho? [s/n]: ').strip().upper()
+            if continuar not in ['S', 'N']:
+                print("Opção inválida! Digite apenas 's' ou 'n'.")
+                continue
+            break
+
+        if continuar == 'N':
+            if not carrinho_de_compras:
+                print('Seu carrinho está vazio')
+                while True:
+                    nova_venda = input('Deseja cadastrar uma nova venda? [s/n]: ').strip().upper()
+                    if nova_venda not in ['S', 'N']:
+                        print("Opção inválida. Digite apenas 's' ou 'n'.")
+                        continue
+                    if nova_venda == 'S':
+                        ComprarProduto()
+                    return
+            else:
+                resultado = FinalizarOuCancelarCompra()
+                if resultado == 'continuar':
+                    continue
+                return
 
 # Finalização da compra
 def FinalizarCompra():
