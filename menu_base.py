@@ -270,6 +270,11 @@ def Relatorios():
         else:
             print("Opção inválida! Tente novamente.")
 
+def registrar_log(nome_arquivo, usuario):
+    with open("log_de_geracoes.txt", mode="a", encoding="utf-8") as log:
+        data_hora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        log.write(f"[{data_hora}] Relatório gerado: {nome_arquivo} | Usuário: {usuario}\n")
+
 # Gerenciar o estoque (Listar, Remover e Editar)
 def GerenciarEstoque():
     while True:
@@ -362,16 +367,17 @@ def ProdutoMaisVendidoPordata():
     if not lista_produtos:
         print("Nenhuma venda registrada ainda.")
         return
+
     print("Escolha o filtro para o relatório:")
     print("1 - Dia específico")
     print("2 - Mês específico")
     print("3 - Semana específica")
     opcao = input("Opção (1/2/3): ").strip()
-    # Verifica se a opção é válida
+
     if opcao not in ['1', '2', '3']:
         print("Opção inválida! Tente novamente.")
         return
-    
+
     if opcao == '1':
         data_str = input("Digite o dia (dd/mm/aaaa): ").strip()
         try:
@@ -403,25 +409,26 @@ def ProdutoMaisVendidoPordata():
         fim_semana = inicio_semana + timedelta(days=6)
         vendas_filtradas = [v for v in lista_vendas if inicio_semana <= v.data_venda <= fim_semana]
         filtro_nome = f"semana_{inicio_semana.strftime('%d-%m-%Y')}_a_{fim_semana.strftime('%d-%m-%Y')}"
-    else:
-        print("Opção inválida!")
-        return
+
     if not vendas_filtradas:
         print("Nenhuma venda encontrada para o período selecionado.")
         return
+
     total_vendas = 0
     print(f"\nVendas filtradas ({len(vendas_filtradas)} registro(s)):")
     for venda in vendas_filtradas:
         subtotal = venda.preco * venda.quantidade
         total_vendas += subtotal
         print(f"Produto: {venda.produto.nome} | Preço: R${venda.preco:.2f} | Quantidade: {venda.quantidade} | Data: {venda.data_venda.strftime('%d/%m/%Y')} | Subtotal: R${subtotal:.2f}")
+
     print(f"\nTotal das vendas no período: R${total_vendas:.2f}")
     print("---" * 20)
+
     # Gerar arquivo CSV
     nome_arquivo = f"relatorio_vendas_{filtro_nome}.csv"
     with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
         escritor = csv.writer(arquivo_csv)
-        escritor.writerow(['Produto', 'Preço Unitário', 'Quantidade', 'Data da Venda', 'Subtotal'])
+        escritor.writerow(['Produto', 'Preço Unitário', 'Quantidade', 'Data da Venda', 'Subtotal', 'Vendedor'])
         for venda in vendas_filtradas:
             subtotal = venda.preco * venda.quantidade
             escritor.writerow([
@@ -429,16 +436,18 @@ def ProdutoMaisVendidoPordata():
                 f"{venda.preco:.2f}",
                 venda.quantidade,
                 venda.data_venda.strftime('%d/%m/%Y'),
-                f"{subtotal:.2f}"
+                f"{subtotal:.2f}",
+                venda.vendedor if venda.vendedor else "N/A"
             ])
         escritor.writerow([])
         escritor.writerow(['', '', '', 'Total Geral', f"{total_vendas:.2f}"])
+
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
+    print(f"Relatório de vendas por {usuario} gerado com sucesso!")
+
     print(f"Relatório CSV gerado com sucesso: {nome_arquivo}")
 
-    # Registrar log
-    usuario = input("Digite o seu nome: ")
-    registrar_log=(nome_arquivo, usuario)
-    print(f"Relatório de vendas por {filtro_nome} gerado com sucesso!")
 
 
 def ProdutoMaisVendido():
