@@ -1,0 +1,31 @@
+📋 O que precisa ser corrigido no código 📋
+
+✂️ Organização e limpeza
+-Remoção dos espaços sobrando no final das linhas.
+-Várias linhas passam do limite de 100 caracteres, então o ideal é quebrar em mais de uma linha.
+-Algumas linhas não estão na margem certa. É como escrever um texto em parágrafo torto, precisa alinhar.
+-Parênteses desnecessários → exemplo: se não (x) → poderia ser só se não x.
+
+📄 Clareza e explicação
+-Faltam pequenas descrições (comentários) dizendo o que cada parte do código faz. 
+-Alguns nomes estão em maiúsculo misturado, regra pede que sejam simples e separados por underline (importar_vendas_csv)
+-Tem trechos de código chamados classes que não dizem claramente o que fazem. Uma frase curta de explicação já ajuda muito.
+
+⚠️ Cuidados no jeito de programar
+-Algumas variáveis e funções usam o mesmo nome em lugares diferentes, isso confunde e pode dar erro.
+-Tem variáveis criadas que nunca são utilizadas, então é melhor apagar para deixar o código mais limpo.
+-Uso de elif sem necessidade → algumas condições poderiam ser escritas de forma mais simples.
+
+🔧 Melhorias na estrutura
+-Algumas funções fazem coisas demais, com muitos caminhos diferentes.
+-Tem funções com instruções demais. Melhor separar em blocos menores para ficar mais fácil de entender.
+-Funções com muitas variáveis diferentes 
+-Tem funções que retornam resultados de formas diferentes. O ideal é padronizar.
+-Funções que às vezes devolvem resultado e às vezes não → isso pode confundir quem usa a função. 
+
+🛑 Erros que podem causar problemas
+-Em alguns pontos, o código tenta usar informações que ainda não existem. Isso pode travar o programa.
+-Quando acontece um erro, ele deveria ser repassado de forma clara, mas em alguns pontos isso não é feito direito.
+
+✅ Resultado final
+A nota do código foi 7,63 de 10.
