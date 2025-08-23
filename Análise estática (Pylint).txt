@@ -29,3 +29,4 @@
 
 ✅ Resultado final
 A nota do código foi 7,63 de 10.
+Nesta versão a nota do pylint é de 8,29 de 10
