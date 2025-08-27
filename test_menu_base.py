@@ -50,3 +50,27 @@ def test_atualizar_estoque_excede():
     with pytest.raises(ValueError):
         p.atualizar_estoque(10)
 
+# ------------------------- COMPRA -------------------------
+def test_finalizar_compra(monkeypatch):
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p = mb.Produto("Biscoito", 2.5, 3, validade)
+    mb.lista_produtos.append(p)
+    mb.carrinho_de_compras.append((p.nome, p.preco, 2))
+
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    mb.FinalizarCompra()
+    assert mb.carrinho_de_compras == []
+    assert mb.registro_vendas[p.nome] == 2
+    assert os.path.exists("nota_fiscal.txt")
+    os.remove("nota_fiscal.txt")
+
+
+def test_cancelar_compra_restaura_estoque():
+    validade = (date.today() + timedelta(days=1)).strftime("%d/%m/%Y")
+    p = mb.Produto("Leite", 5, 1, validade)
+    mb.lista_produtos.append(p)
+    mb.carrinho_de_compras.append((p.nome, p.preco, 1))
+
+    mb.CancelarCompra()
+    assert p.quantidade == 1
+    assert mb.carrinho_de_compras == []
