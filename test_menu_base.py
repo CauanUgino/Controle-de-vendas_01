@@ -105,3 +105,28 @@ def test_editar_produto(monkeypatch):
     assert p.nome == "Feijão Novo"
     assert p.preco == 12
     assert p.quantidade == 5
+
+# ------------------------- RELATÓRIOS -------------------------
+def test_produto_mais_vendido(monkeypatch):
+    p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=10)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.registro_vendas[p.nome] = 3
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    mb.ProdutoMaisVendido()
+
+
+def test_relatorio_agrupado(monkeypatch):
+    p = mb.Produto("Feijão", 5, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    mb.RelatorioAgrupado()
+
+
+def test_relatorio_vendas_por_produto(monkeypatch):
+    p = mb.Produto("Macarrão", 3, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    mb.RelatorioVendasPorProduto()
+
