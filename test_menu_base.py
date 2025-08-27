@@ -5,6 +5,8 @@ import builtins
 import io
 import csv
 import os
+#  Comando para rodar pytest
+#  python -m pytest --cov=menu_base -v
 
 @pytest.fixture(autouse=True)
 def limpar_listas():
@@ -20,7 +22,7 @@ def limpar_listas():
     mb.registro_vendas.clear()
 
 
-# ------------------------- PRODUTO -------------------------
+# PRODUTO
 def test_produto_valido():
     validade = (date.today() + timedelta(days=10)).strftime("%d/%m/%Y")
     p = mb.Produto("Arroz", 10, 5, validade)
@@ -50,7 +52,7 @@ def test_atualizar_estoque_excede():
     with pytest.raises(ValueError):
         p.atualizar_estoque(10)
 
-# ------------------------- COMPRA -------------------------
+# COMPRA 
 def test_finalizar_compra(monkeypatch):
     validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
     p = mb.Produto("Biscoito", 2.5, 3, validade)
@@ -75,7 +77,7 @@ def test_cancelar_compra_restaura_estoque():
     assert p.quantidade == 1
     assert mb.carrinho_de_compras == []
 
-# ------------------------- GERENCIAMENTO ESTOQUE -------------------------
+# GERENCIAMENTO ESTOQUE
 def test_remover_produto(monkeypatch):
     validade = (date.today() + timedelta(days=2)).strftime("%d/%m/%Y")
     p = mb.Produto("Arroz", 10, 5, validade)
@@ -106,7 +108,7 @@ def test_editar_produto(monkeypatch):
     assert p.preco == 12
     assert p.quantidade == 5
 
-# ------------------------- RELATÓRIOS -------------------------
+# RELATÓRIOS 
 def test_produto_mais_vendido(monkeypatch):
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=10)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -129,4 +131,3 @@ def test_relatorio_vendas_por_produto(monkeypatch):
     mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
     mb.RelatorioVendasPorProduto()
-
