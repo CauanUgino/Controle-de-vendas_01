@@ -74,3 +74,34 @@ def test_cancelar_compra_restaura_estoque():
     mb.CancelarCompra()
     assert p.quantidade == 1
     assert mb.carrinho_de_compras == []
+
+# ------------------------- GERENCIAMENTO ESTOQUE -------------------------
+def test_remover_produto(monkeypatch):
+    validade = (date.today() + timedelta(days=2)).strftime("%d/%m/%Y")
+    p = mb.Produto("Arroz", 10, 5, validade)
+    mb.lista_produtos.append(p)
+
+    monkeypatch.setattr("builtins.input", lambda _: "1")
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    monkeypatch.setattr("builtins.input", lambda _: "S")
+    mb.RemoverProduto()
+    assert len(mb.lista_produtos) == 0
+
+
+def test_editar_produto(monkeypatch):
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p = mb.Produto("Feijão", 8, 3, validade)
+    mb.lista_produtos.append(p)
+
+    responses = iter([
+        "1",          # escolher produto 1
+        "Feijão Novo",# novo nome
+        "12",         # novo preço
+        "5",          # nova quantidade
+        (date.today()+timedelta(days=10)).strftime("%d/%m/%Y")  # nova validade
+    ])
+    monkeypatch.setattr("builtins.input", lambda _: next(responses))
+    mb.EditarProduto()
+    assert p.nome == "Feijão Novo"
+    assert p.preco == 12
+    assert p.quantidade == 5
