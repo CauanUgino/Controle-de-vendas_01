@@ -83,9 +83,10 @@ def test_remover_produto(monkeypatch):
     p = mb.Produto("Arroz", 10, 5, validade)
     mb.lista_produtos.append(p)
 
-    monkeypatch.setattr("builtins.input", lambda _: "1")
+    inputs = iter(["1", "S"])  # primeiro escolhe produto, depois confirma exclusão
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    monkeypatch.setattr("builtins.input", lambda _: "S")
+
     mb.RemoverProduto()
     assert len(mb.lista_produtos) == 0
 
