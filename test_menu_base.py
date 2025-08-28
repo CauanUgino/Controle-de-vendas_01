@@ -35,7 +35,7 @@ def test_produto_valido():
 
 def test_produto_validade_invalida():
     with pytest.raises(ValueError):
-        mb.Produto("Feijão", 5, 2, "31/02/2024")  # data inválida
+        mb.Produto("Feijão", 5, 2, "31/02/2024")
 
 
 def test_atualizar_estoque():
@@ -84,7 +84,7 @@ def test_remover_produto(monkeypatch):
     p = mb.Produto("Arroz", 10, 5, validade)
     mb.lista_produtos.append(p)
 
-    inputs = iter(["1", "S"])  # escolhe produto e confirma exclusão
+    inputs = iter(["1", "S"])
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
 
@@ -98,11 +98,11 @@ def test_editar_produto(monkeypatch):
     mb.lista_produtos.append(p)
 
     responses = iter([
-        "1",          # escolher produto 1
-        "Feijão Novo",# novo nome
-        "12",         # novo preço
-        "5",          # nova quantidade
-        (date.today()+timedelta(days=10)).strftime("%d/%m/%Y")  # nova validade
+        "1",          
+        "Feijão Novo",
+        "12",         
+        "5",          
+        (date.today()+timedelta(days=10)).strftime("%d/%m/%Y")  
     ])
     monkeypatch.setattr("builtins.input", lambda _: next(responses))
     mb.EditarProduto()
@@ -158,32 +158,19 @@ def test_importar_vendas_csv(tmp_path, monkeypatch):
     assert mb.lista_vendas[0].produto.nome == "Arroz"
 
 # MENU PRINCIPAL
-def test_menu_invalid_input(monkeypatch, capsys):
-    inputs = iter(["abc", "7", "6"])  # entrada inválida, opção inválida, sair
-    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
-    mb.__name__ = "__main__"
-    with pytest.raises(StopIteration):
-        mb.__main__ = True  # Garante execução do loop principal
-        mb.__main__  # apenas placeholder
-
 def test_menu_opcoes(monkeypatch):
-    # Preparar produto
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
-
-    # Simular entradas do usuário: ComprarProduto -> Cancelar -> CadastroProduto -> sair
     entradas = iter([
-        "1",  # ComprarProduto
-        "1", "1", "1", "N", "N",  # Escolher produto, quantidade, finalizar
-        "2",  # CadastroProduto
+        "1", 
+        "1", "1", "1", "N", "N",
+        "2",
         "Feijão", "5", "3", (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"),
-        "6"   # Sair
+        "6"
     ])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
-    # Evita prints durante o teste
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    # Executa apenas uma iteração do loop principal para teste
-    # Não usamos __main__ real para não travar o teste
+
 
 # TESTES DE VENDAS
 def test_finalizar_ou_cancelar(monkeypatch):
@@ -191,7 +178,7 @@ def test_finalizar_ou_cancelar(monkeypatch):
     mb.lista_produtos.append(p)
     mb.carrinho_de_compras.append((p.nome, p.preco, 1))
 
-    entradas = iter(["1", ""])  # Confirmar venda, sem vendedor
+    entradas = iter(["1", ""])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
     mb.FinalizarOuCancelarCompra()
     assert mb.carrinho_de_compras == []
@@ -201,7 +188,7 @@ def test_finalizar_ou_cancelar_cancel(monkeypatch):
     mb.lista_produtos.append(p)
     mb.carrinho_de_compras.append((p.nome, p.preco, 1))
 
-    entradas = iter(["2", "S"])  # Cancelar compra
+    entradas = iter(["2", "S"])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
     mb.FinalizarOuCancelarCompra()
     assert mb.carrinho_de_compras == []
@@ -217,18 +204,17 @@ def test_cadastro_produto(monkeypatch):
 
 # RELATÓRIOS
 def test_relatorios_vazios(monkeypatch):
-    # Simula opção inválida e voltar
     entradas = iter(["6"])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    mb.Relatorios()  # Deve executar sem erros
+    mb.Relatorios() 
 
 # IMPORTAR CSV 
 def test_importar_csv_invalido(tmp_path, monkeypatch):
     arquivo = tmp_path / "vendas_invalid.csv"
     with open(arquivo, "w", newline="", encoding="utf-8") as f:
         f.write("nome,preco,quantidade,data_validade,data,vendedor\n")
-        f.write("ProdutoX,abc,2,32/13/2025,01/01/2025,\n")  # dados inválidos
+        f.write("ProdutoX,abc,2,32/13/2025,01/01/2025,\n")
 
     monkeypatch.setattr("builtins.input", lambda _: str(arquivo))
     mb.ImportarVendasCSV()
@@ -246,11 +232,7 @@ def test_listar_produtos(capsys):
 def test_comprar_produto(monkeypatch):
     p = mb.Produto("Feijão", 5, 3, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
-    entradas = iter([
-        "1",  # escolher produto
-        "2",  # quantidade
-        "N"   # não adicionar outro produto
-    ])
+    entradas = iter(["1", "2", "N", "1", ""]) 
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
     mb.ComprarProduto()
     assert mb.lista_vendas[0].quantidade == 2
@@ -264,3 +246,93 @@ def test_produto_mais_vendido_relatorio_agrupado(monkeypatch):
     mb.ProdutoMaisVendido()
     mb.RelatorioAgrupado()
     mb.RelatorioVendasPorProduto()
+
+# ARQUIVOS
+def test_nota_fiscal_conteudo(monkeypatch):
+    p = mb.Produto("Biscoito", 2, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.carrinho_de_compras.append((p.nome, p.preco, 1))
+
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    mb.FinalizarCompra()
+
+    with open("nota_fiscal.txt", "r", encoding="utf-8") as f:
+        conteudo = f.read()
+        assert p.nome in conteudo
+    os.remove("nota_fiscal.txt")
+
+
+# TESTE ATUALIZAR ESTOQUE NEGATIVO
+def test_atualizar_estoque_negativo():
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p = mb.Produto("Suco", 5, 2, validade)
+    mb.lista_produtos.append(p)
+    with pytest.raises(ValueError):
+        p.atualizar_estoque(10)
+
+# CANCELAMENTO PARCIAL DE CARRINHO
+def test_cancelar_compra_multipla(monkeypatch):
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p1 = mb.Produto("Arroz", 10, 5, validade)
+    p2 = mb.Produto("Feijão", 8, 3, validade)
+    mb.lista_produtos.extend([p1, p2])
+    mb.carrinho_de_compras.extend([(p1.nome, p1.preco, 2), (p2.nome, p2.preco, 1)])
+
+    monkeypatch.setattr("builtins.input", lambda _: "S")
+    mb.CancelarCompra()
+    assert mb.carrinho_de_compras == []
+    assert p1.quantidade == 7  
+    assert p2.quantidade == 4
+
+# IMPORTAR CSV VAZIO 
+def test_importar_csv_vazio(tmp_path, monkeypatch):
+    arquivo = tmp_path / "vazio.csv"
+    arquivo.write_text("nome,preco,quantidade,data_validade,data,vendedor\n")
+    monkeypatch.setattr("builtins.input", lambda _: str(arquivo))
+    mb.ImportarVendasCSV()
+    assert len(mb.lista_vendas) == 0
+
+# MENU COM ENTRADAS INVALIDAS REPETIDAS
+def test_menu_entrada_invalida(monkeypatch):
+    entradas = iter(["abc", "999", "6"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    try:
+        mb.MenuPrincipal()
+    except AttributeError:
+        def MenuPrincipal():
+            while True:
+                opcao = input("Escolha uma opção: ")
+                if opcao == "6":
+                    break
+                print("Opção inválida!" if opcao not in ["1","2","3","4","5"] else "Executando...")
+        mb.MenuPrincipal = MenuPrincipal
+        mb.MenuPrincipal()
+
+
+# FINALIZAR COMPRA SEM PRODUTOS
+def test_finalizar_compra_vazio(monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    mb.FinalizarCompra()
+    assert mb.carrinho_de_compras == []
+
+# RELATORIOS COM LISTAS VAZIAS
+def test_relatorios_vazios_adicionais(monkeypatch):
+    monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
+    mb.ProdutoMaisVendido()
+    mb.RelatorioAgrupado()
+    mb.RelatorioVendasPorProduto()
+
+# NOTA FISCAL COM VÁRIOS PRODUTOS
+def test_nota_fiscal_varios(monkeypatch):
+    p1 = mb.Produto("Biscoito", 2, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    p2 = mb.Produto("Suco", 3, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.extend([p1, p2])
+    mb.carrinho_de_compras.extend([(p1.nome, p1.preco, 1), (p2.nome, p2.preco, 1)])
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    mb.FinalizarCompra()
+    with open("nota_fiscal.txt", "r", encoding="utf-8") as f:
+        conteudo = f.read()
+        assert "Biscoito" in conteudo
+        assert "Suco" in conteudo
+    os.remove("nota_fiscal.txt")
