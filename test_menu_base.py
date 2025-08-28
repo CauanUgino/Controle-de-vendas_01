@@ -131,3 +131,26 @@ def test_relatorio_vendas_por_produto(monkeypatch):
     mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
     mb.RelatorioVendasPorProduto()
+
+# IMPORTAR CSV 
+def test_importar_vendas_csv(tmp_path, monkeypatch):
+    arquivo = tmp_path / "vendas.csv"
+    p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+
+    with open(arquivo, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["nome","preco","quantidade","data_validade","data","vendedor"])
+        writer.writeheader()
+        writer.writerow({
+            "nome":"Arroz",
+            "preco":"10",
+            "quantidade":"2",
+            "data_validade":(date.today()+timedelta(days=5)).strftime("%d/%m/%Y"),
+            "data":date.today().strftime("%d/%m/%Y"),
+            "vendedor":""
+        })
+
+    monkeypatch.setattr("builtins.input", lambda _: str(arquivo))
+    mb.ImportarVendasCSV()
+    assert len(mb.lista_vendas) == 1
+    assert mb.lista_vendas[0].produto.nome == "Arroz"
