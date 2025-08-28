@@ -895,32 +895,33 @@ lista_produtos.append(Produto("Café 500g", 16.75, 8, "05/06/2026"))
 #####Loop principal essencial do sistema######
 #Ele deve ficar no final do código, após todas as definições de funções e classes.
 #O loop principal deve ser o último bloco de código a ser executado.
-while True:
-    print('=-=' * 20)
-    menu()
-    print('=-=' * 20)
-    try:
-        resposta = int(input('Digite sua resposta: '))
-    except ValueError:
-        print("Entrada inválida. Digite um número.")
-        continue
+if __name__ == "__main__":
+    while True:
+        print('=-=' * 20)
+        menu()
+        print('=-=' * 20)
+        try:
+            resposta = int(input('Digite sua resposta: '))
+        except ValueError:
+            print("Entrada inválida. Digite um número.")
+            continue
 
-    if resposta == 1:
-        carrinho_de_compras.clear()
-        ComprarProduto()
-    elif resposta == 2:
-        CadastroProduto()
-    elif resposta == 3:
-        GerenciarEstoque()
-    elif resposta == 4:
-        ImportarVendasCSV()
-    elif resposta == 5:
-        Relatorios()
-    elif resposta == 6:
-        print('Saindo do sistema. Até logo!')
-        break
-    else:
-        print("Opção inválida. Tente novamente.")
+        if resposta == 1:
+            carrinho_de_compras.clear()
+            ComprarProduto()
+        elif resposta == 2:
+            CadastroProduto()
+        elif resposta == 3:
+            GerenciarEstoque()
+        elif resposta == 4:
+            ImportarVendasCSV()
+        elif resposta == 5:
+            Relatorios()
+        elif resposta == 6:
+            print('Saindo do sistema. Até logo!')
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
 
 print('=-=' * 20)
 print("Obrigado por usar o sistema de vendas!")
