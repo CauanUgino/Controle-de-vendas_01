@@ -7,8 +7,14 @@ import re
 import os
 
 # Cria pasta de relatórios se não existir
-PASTA_RELATORIOS = "relatorios"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PASTA_RELATORIOS = os.path.join(BASE_DIR, "relatorios")
 os.makedirs(PASTA_RELATORIOS, exist_ok=True)
+print(f"Pasta de relatórios: {PASTA_RELATORIOS}")
+
+with open(os.path.join(PASTA_RELATORIOS, "teste.csv"), "w", encoding="utf-8") as f:
+    f.write("funcionando!")
+print("Arquivo de teste salvo.")
 
 # Listas para armazenar os produtos e as compras
 lista_produtos = []
@@ -75,8 +81,9 @@ def menu():
 [2] - Cadastrar Novo Produto
 [3] - Gerenciar o estoque
 [4] - Importar produtos de um arquivo CSV
-[5] - Relatórios         
-[6] - Sair do sistema''')
+[5] - Relatórios
+[6] - Baixar relatórios (Gerar arquivos na pasta destino)      
+[7] - Sair do sistema''')
     
 def ImportarVendasCSV():
     def validar_data(data_str, formatos=["%d/%m/%Y", "%Y-%m-%d"]):
@@ -487,27 +494,34 @@ def ProdutoMaisVendidoPordata():
 
 
 def ProdutoMaisVendido():
-    print("\n--- Produtos Mais Vendidos ---")
-
-    if not registro_vendas:
-        print("Nenhuma venda registrada ainda.")
-        print('---' * 20)
+    if not lista_vendas:
+        print("Nenhuma venda registrada.")
         return
 
-    # Determina o produto mais vendido
-    produto_mais_vendido = max(registro_vendas, key=registro_vendas.get)
-    quantidade_mais_vendida = registro_vendas[produto_mais_vendido]
+    vendas_por_produto = {}
+    for venda in lista_vendas:
+        if venda.produto.nome not in vendas_por_produto:
+            vendas_por_produto[venda.produto.nome] = 0
+        vendas_por_produto[venda.produto.nome] += venda.quantidade
 
-    print(f'Produto mais vendido: {produto_mais_vendido} | {quantidade_mais_vendida} unidades vendidas')
-    print('---' * 20)
-    print(f'Total de produtos vendidos: {len(registro_vendas)} itens e {sum(registro_vendas.values())} unidades no total')
-    print('---' * 20)
+    produto_mais_vendido = max(vendas_por_produto, key=vendas_por_produto.get)
+    quantidade = vendas_por_produto[produto_mais_vendido]
 
-    # Ordenar o dicionário por quantidade vendida (valor), em ordem decrescente
-    produtos_ordenados = sorted(registro_vendas.items(), key=lambda item: item[1], reverse=True)
+    # Mostra na tela
+    print("\n--- Produto Mais Vendido ---")
+    print(f"{produto_mais_vendido}: {quantidade} unidades")
 
-    for produto, quantidade in produtos_ordenados:
-        print(f"Produto: {produto} | Quantidade vendida: {quantidade}")
+    # Salva em CSV
+    timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    nome_arquivo = f"produto_mais_vendido_{timestamp}.csv"
+    caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
+
+    with open(caminho_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
+        escritor = csv.writer(arquivo_csv)
+        escritor.writerow(["Produto", "Quantidade Vendida"])
+        escritor.writerow([produto_mais_vendido, quantidade])
+
+    print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
 
 #relatório agrupado, para melhor visualização dos dados
 def RelatorioAgrupado():
@@ -566,50 +580,88 @@ def RelatorioAgrupado():
     print("="*60)
 
 def RelatorioVendasPorProduto():
-    print("\nRelatório de vendas por produto:")
-    
     if not lista_vendas:
-        print("Nenhuma venda registrada ainda.")
+        print("Nenhuma venda registrada.")
         return
 
     vendas_por_produto = {}
-    
-    # Agrupa as vendas por nome do produto
     for venda in lista_vendas:
-        nome_produto = venda.produto.nome
-        if nome_produto not in vendas_por_produto:
-            vendas_por_produto[nome_produto] = {
-                "quantidade": 0,
-                "total_reais": 0.0,
-                "preco_unitario": venda.produto.preco
-            }
-        vendas_por_produto[nome_produto]["quantidade"] += venda.quantidade
-        vendas_por_produto[nome_produto]["total_reais"] += venda.quantidade * venda.produto.preco
+        if venda.produto.nome not in vendas_por_produto:
+            vendas_por_produto[venda.produto.nome] = 0
+        vendas_por_produto[venda.produto.nome] += venda.quantidade
 
-    # Determina o produto mais vendido
-    produto_mais_vendido = max(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"])
-    nome_mais_vendido = produto_mais_vendido[0]
-    quantidade_mais_vendida = produto_mais_vendido[1]["quantidade"]
+    # Mostra na tela
+    print("\n--- Relatório de Vendas por Produto ---")
+    for produto, quantidade in vendas_por_produto.items():
+        print(f"{produto}: {quantidade} unidades")
 
-    print(f"- Produto mais vendido: {nome_mais_vendido}")
-    print(f"- Quantidade total vendida: {quantidade_mais_vendida} unidades\n")
+    # Salva em CSV
+    timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    nome_arquivo = f"relatorio_vendas_por_produto_{timestamp}.csv"
+    caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
 
-    print("📦 Ranking de vendas (por quantidade):")
-    ranking = sorted(vendas_por_produto.items(), key=lambda item: item[1]["quantidade"], reverse=True)
+    with open(caminho_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
+        escritor = csv.writer(arquivo_csv)
+        escritor.writerow(["Produto", "Quantidade Vendida"])
+        for produto, quantidade in vendas_por_produto.items():
+            escritor.writerow([produto, quantidade])
 
-    total_geral_unidades = 0
-    total_geral_reais = 0.0
+    print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
 
-    for idx, (produto, dados) in enumerate(ranking, 1):
-        qtd = dados["quantidade"]
-        total = dados["total_reais"]
-        total_geral_unidades += qtd
-        total_geral_reais += total
-        print(f"{idx}º - {produto}: {qtd} unidade(s) - R$ {total:.2f}")
+#Salva o relatório com um nome diferente dos outros para permitir o salvamento em pasta de vários 
+def salvar_relatorio(nome_base, cabecalho, linhas):
+    timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+    nome_arquivo = f"{nome_base}_{timestamp}.csv"
+    caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
+    with open(caminho_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
+        escritor = csv.writer(arquivo_csv)
+        if cabecalho:
+            escritor.writerow(cabecalho)
+        escritor.writerows(linhas)
+    print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
+    return nome_arquivo
 
-    print(f"\n- Total de produtos distintos vendidos: {len(vendas_por_produto)}")
-    print(f"- Total geral de unidades vendidas: {total_geral_unidades}")
-    print(f"- Total geral em vendas (R$): R$ {total_geral_reais:.2f}")
+#Baixa os relatórios na pasta destino, quando acionado
+def BaixarRelatorios():
+    while True:
+        print("\n--- BAIXAR RELATÓRIOS ---")
+        print("[1] - Vendas Totais")
+        print("[2] - Vendas por Produto")
+        print("[3] - Produto Mais Vendido")
+        print("[4] - Voltar ao menu principal")
+        opcao = input("Escolha uma opção: ").strip()
+
+        if opcao == '1':
+            if not lista_vendas:
+                print("Nenhuma venda registrada.")
+                continue
+            linhas = []
+            for venda in lista_vendas:
+                subtotal = venda.preco * venda.quantidade
+                linhas.append([
+                    venda.produto.nome,
+                    f"{venda.preco:.2f}",
+                    venda.quantidade,
+                    venda.data_venda.strftime('%d/%m/%Y'),
+                    f"{subtotal:.2f}",
+                    venda.vendedor if venda.vendedor else "Não informado"
+                ])
+            salvar_relatorio("relatorio_vendas_totais",
+                             ["Produto","Preço","Qtd","Data","Subtotal","Vendedor"],
+                             linhas)
+
+        elif opcao == '2':
+            RelatorioVendasPorProduto()  # mostra na tela
+            # Aqui você pode adaptar para também salvar em CSV
+
+        elif opcao == '3':
+            ProdutoMaisVendido()  # mostra na tela
+            # Também pode salvar em CSV se desejar
+
+        elif opcao == '4':
+            break
+        else:
+            print("Opção inválida! Tente novamente.")
 
 # Listar produtos (incluindo vencidos)
 def ListarProdutos():
@@ -942,6 +994,9 @@ if __name__ == "__main__":
             Relatorios()
             pass
         elif resposta == 6:
+            BaixarRelatorios()
+            pass
+        elif resposta == 7:
             print('Saindo do sistema. Até logo!')
             break
         else:
