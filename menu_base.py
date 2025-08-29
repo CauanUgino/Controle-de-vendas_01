@@ -324,61 +324,51 @@ def GerarRelatorioVendasTotais():
     if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
         return
+
     total_vendas = sum(venda.preco * venda.quantidade for venda in lista_vendas)
     total_produtos_vendidos = len(lista_vendas)
     total_unidades_vendidas = sum(venda.quantidade for venda in lista_vendas)
-    
+
+    # Exibição detalhada das vendas
+    for venda in lista_vendas:
+        subtotal = venda.preco * venda.quantidade
+        print(f"Produto: {venda.produto.nome} | Preço unitário: R${venda.preco:.2f} | Quantidade: {venda.quantidade} | Data: {venda.data_venda.strftime('%d/%m/%Y')} | Subtotal: R${subtotal:.2f} | Vendedor: {venda.vendedor if venda.vendedor else 'Não informado'}")
+
+    print(f"Total de vendas registradas: {len(lista_vendas)}")
+    print(f"Total de produtos vendidos: {total_produtos_vendidos}")
+    print(f"Total de unidades vendidas: {total_unidades_vendidas}")
+    print(f"Faturamento total: R${total_vendas:.2f}")
+
+    # Geração do arquivo CSV na pasta de relatórios
     nome_arquivo = f"relatorio_vendas_totais_{date.today().strftime('%d-%m-%Y')}.csv"
     caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
     with open(caminho_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
         escritor = csv.writer(arquivo_csv)
-        escritor.writerow(['Produto','Preço unitário','Quantidade','Data da Venda','Subtotal','Vendedor'])
+        escritor.writerow(['Produto', 'Preço unitário', 'Quantidade', 'Data da Venda', 'Subtotal', 'Vendedor'])
         for venda in lista_vendas:
             escritor.writerow([
                 venda.produto.nome,
                 f"{venda.preco:.2f}",
                 venda.quantidade,
-        subtotal = venda.preco * venda.quantidade
-        print(f"Produto: {venda.produto.nome} | Preço unitário: R${venda.preco:.2f} | Quantidade: {venda.quantidade} | Data: {venda.data_venda.strftime('%d/%m/%Y')} | Subtotal: R${subtotal:.2f} | Vendedor: {venda.vendedor if venda.vendedor else 'Não informado'}")
                 venda.data_venda.strftime('%d/%m/%Y'),
                 f"{venda.preco * venda.quantidade:.2f}",
                 venda.vendedor if venda.vendedor else "Não informado"
             ])
-        escritor.writerow([len(lista_vendas), total_produtos_vendidos, total_unidades_vendidas, f"{total_vendas:.2f}"])
-    print(f"\nRelatório CSV gerado com sucesso: {caminho_arquivo}")
-    usuario = input("Digite o seu nome: ")
-    registrar_log(nome_arquivo, usuario)
-    print(f"Relatório de vendas totais gerado com sucesso por {usuario}!")
-    
-    # Gerar arquivo CSV
-    nome_arquivo = f"relatorio_vendas_totais_{date.today().strftime('%d-%m-%Y')}.csv"
-    with open(nome_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
-        escritor = csv.writer(arquivo_csv)
-
+        # Linha de totais
         escritor.writerow([
-        'Produto',
-        'Preço unitário',
-        'Quantidade',
-        'Data da Venda',
-        'Subtotal',
-        'Vendedor'
-    ])
-        for venda in lista_vendas:
-            escritor.writerow([
-            venda.produto.nome,
-            f"{venda.preco:.2f}",
-            venda.quantidade,
-            venda.data_venda.strftime('%d/%m/%Y'),
-            f"{venda.preco * venda.quantidade:.2f}",
-            venda.vendedor if venda.vendedor else "Não informado"
+            'Totais:',
+            '',
+            total_unidades_vendidas,
+            '',
+            f"{total_vendas:.2f}",
+            ''
         ])
 
-        escritor.writerow([len(lista_vendas), total_produtos_vendidos, total_unidades_vendidas, f"{total_vendas:.2f}"])
-    print(f"\nRelatório CSV gerado com sucesso: {nome_arquivo}")
+    print(f"\nRelatório CSV gerado com sucesso: {caminho_arquivo}")
 
-    # Registrar log
+    # Registrar log corretamente
     usuario = input("Digite o seu nome: ")
-    registrar_log=(nome_arquivo, usuario)
+    registrar_log(nome_arquivo, usuario)
     print(f"Relatório de vendas totais gerado com sucesso por {usuario}!")
 
 # Função para relatório de produtos mais vendidos por data
