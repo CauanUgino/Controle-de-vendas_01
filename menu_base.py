@@ -74,109 +74,115 @@ def menu():
 [6] - Sair do sistema''')
     
 def ImportarVendasCSV():
+    def validar_data(data_str, formatos=["%d/%m/%Y", "%Y-%m-%d"]):
+        """Valida uma data em múltiplos formatos e retorna um objeto date ou None."""
+        for fmt in formatos:
+            try:
+                return datetime.strptime(data_str.strip(), fmt).date()
+            except (ValueError, AttributeError):
+                continue
+        return None
+
+    def log_erro(msg, produto=None):
+        """Centraliza mensagens de erro."""
+        if produto:
+            print(f"[ERRO] Produto: {produto} -> {msg}")
+        else:
+            print(f"[ERRO] {msg}")
+
     caminho = input("Digite o caminho completo do arquivo CSV de vendas: ").strip()
     try:
         with open(caminho, newline='', encoding='utf-8') as csvfile:
             leitor = csv.DictReader(csvfile)
             vendas_importadas = 0
+
             for linha in leitor:
                 try:
-                    ####Lê os dados do CSV####
-                    # Verifica se o nome do produto não está vazio
-                    nome = linha['nome']
-                    # Verifica se o nome do produto não está vazio
-                    if not nome:
-                        print("Nome do produto não pode ser vazio.")
+
+                    # Validação de campos obrigatórios
+                    campos_obrigatorios = ["nome", "preco", "quantidade", "data"]
+                    if any(campo not in linha or not linha[campo].strip() for campo in campos_obrigatorios):
+                        log_erro(f"Campos obrigatórios ausentes ou vazios -> {linha}")
                         continue
-                    preco= float(linha['preco'])
-                    # Verifica se o preço é um número positivo
+
+                    #### Lê os dados do CSV ####
+                    nome = linha["nome"].strip()
+                    preco = float(linha["preco"])
+                    quantidade_str = linha["quantidade"].strip()
+                    data_venda_str = linha["data"].strip()
+                    vendedor = linha.get("vendedor", "").strip() or None
+
+                    # Validade agora é opcional
+                    validade_str = linha.get("data_validade", "").strip()
+                    validade = validar_data(validade_str) if validade_str else None
+
+                    # Validação de valores
+                    if not quantidade_str.isdigit():
+                        log_erro("Quantidade inválida", nome)
+                        continue
+                    quantidade = int(quantidade_str)
+
                     if preco < 0:
-                        print(f"Preço inválido para o produto {nome}.")
+                        log_erro("Preço inválido", nome)
                         continue
-                    # Verifica se a quantidade é um número inteiro positivo
-                    if not linha['quantidade'].isdigit():
-                        print(f"Quantidade inválida para o produto {nome}.")
-                        continue
-                    quantidade = int(linha['quantidade'])
 
-                    # Verifica se a validade não está vazia
-                    # Se a validade não estiver no formato correto, ignora a venda
-                    if not linha['data_validade']:
-                        print(f"Data de validade não pode ser vazia para o produto {nome}.")
+                    data_venda = validar_data(data_venda_str)
+                    if not data_venda:
+                        log_erro("Data de venda inválida", nome)
                         continue
-                    validade = linha['data_validade']
 
-                    # Verifica se a data de validade está no formato correto
-                    #######PROLEMA NA VALIDAÇÃO DE DATA######
-                    #BUG: A data de validade não está sendo validada corretamente
-                    try:
-                        validade = datetime.strptime(validade, "%d/%m/%Y").date()
-                    except ValueError:
-                        print(f"Data de validade inválida para o produto {nome}.")
+                    if data_venda > date.today():
+                        log_erro(f"Data de venda futura: {data_venda}", nome)
                         continue
-                    data_venda = datetime.strptime(linha['data'], "%d/%m/%Y").date()
-            
-                    
 
-                    # Verifica se a data de venda é válida
-                    # Se a data de venda for uma data futura, ignora a venda
-                    date_hoje = date.today()
-                    if data_venda > date_hoje:
-                        print(f" Data de venda inválida: {data_venda} (maior que a data atual)")
-                        continue
-                    
-                    # Verifica se o produto existe no estoque
-                    # Se o produto não existir, ignora a venda
-                    # Se o produto estiver vencido, ignora a venda
+
+                    # Verificações de estoque
                     produto = next((p for p in lista_produtos if p.nome == nome), None)
 
-                    # Se o produto não existir, ignora a venda
+
                     if not produto:
-                        print(f" Produto não encontrado no estoque: {nome}")
+                        log_erro("Produto não encontrado no estoque", nome)
                         continue
 
-                    # Se o produto estiver vencido, ignora a venda
+
                     if produto.esta_vencido():
-                        print(f" Produto vencido ignorado na venda: {nome}")
+                        log_erro("Produto vencido", nome)
                         continue
-                    
-                    # Verifica se a quantidade solicitada é maior que a disponível
+
                     if quantidade > produto.quantidade:
-                        print(f" Estoque insuficiente para {nome} (pedido: {quantidade}, disponível: {produto.quantidade})")
+                        log_erro(f"Estoque insuficiente (pedido: {quantidade}, disponível: {produto.quantidade})", nome)
                         continue
-                    
-                    vendedor = linha.get('vendedor', '').strip() or None
-                   
-                    # Subtrai do estoque
+
+                    # Verifica divergência de preço
+                    if abs(produto.preco - preco) > 0.01:
+                        print(f"[AVISO] Preço divergente para {nome} (estoque: {produto.preco:.2f}, CSV: {preco:.2f})")
+
+
+                    # Registra a venda
                     produto.quantidade -= quantidade
                     venda = Venda(produto, quantidade, data_venda, vendedor=vendedor)
                     lista_vendas.append(venda)
-                    # Atualiza o registro de vendas
-                    if nome in registro_vendas:
-                        registro_vendas[nome] += quantidade
-                    else:
-                        registro_vendas[nome] = quantidade
-                    
-                    print(f" Venda registrada: {nome} | Preço unitário: R$ {preco:.2f} | Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
 
-                    if vendedor:
-                        print(f"| Vendedor: {vendedor}")
-                    else:
-                        print("| Vendedor: Não informado")
-                    
+                    # Atualiza registro de vendas
+                    registro_vendas[nome] = registro_vendas.get(nome, 0) + quantidade
+
+                    # Resumo da venda importada
+                    print(f" Venda registrada: {nome} | Preço unitário: R$ {produto.preco:.2f} | "
+                          f"Quantidade: {quantidade} | Data: {data_venda.strftime('%d/%m/%Y')}")
+                    print(f"| Vendedor: {vendedor if vendedor else 'Não informado'}")
+
                     vendas_importadas += 1
 
 
                 except Exception as e:
-                    print(f"Erro ao importar linha: {linha} -> {e}")
-            
+                    log_erro(f"Erro inesperado ao importar linha {linha} -> {e}")
+
             print(f"\n {vendas_importadas} venda(s) registrada(s) com sucesso!\n")
 
     except FileNotFoundError:
-        print("Arquivo não encontrado.")
+        log_erro("Arquivo não encontrado.")
     except Exception as e:
-        print(f"Erro ao ler o arquivo: {e}")
-
+        log_erro(f"Erro ao ler o arquivo: {e}")
 
 
 # Cadastro de novos produtos
@@ -190,8 +196,8 @@ def CadastroProduto():
         # Verifica se o nome não está vazio E se não contém nenhum dígito
         if not nome_produto:
             print("O nome do produto não pode ser vazio. Por favor, digite um nome válido.")
-        elif any(char.isdigit() for char in nome_produto):
-            print("Nome inválido! O nome do produto não pode conter números. Por favor, digite um nome válido.")
+        elif not re.match(r'^(?=.*[A-Za-zÀ-ÖØ-öø-ÿ])[A-Za-zÀ-ÖØ-öø-ÿ0-9\s]+$', nome_produto):
+            print("Nome inválido! O nome do produto não pode conter apenas números. Por favor, digite um nome válido.")
         else:
             # Se o nome for válido, sai do loop
             break
@@ -320,6 +326,8 @@ def GerarRelatorioVendasTotais():
     
     for venda in lista_vendas:
         subtotal = venda.preco * venda.quantidade
+        subtotal = venda.preco * venda.quantidade
+        print(f"Produto: {venda.produto.nome} | Preço unitário: R${venda.preco:.2f} | Quantidade: {venda.quantidade} | Data: {venda.data_venda.strftime('%d/%m/%Y')} | Subtotal: R${subtotal:.2f} | Vendedor: {venda.vendedor if venda.vendedor else 'Não informado'}")
         total_vendas += subtotal
         total_produtos_vendidos += 1
         total_unidades_vendidas += venda.quantidade
@@ -895,33 +903,32 @@ lista_produtos.append(Produto("Café 500g", 16.75, 8, "05/06/2026"))
 #####Loop principal essencial do sistema######
 #Ele deve ficar no final do código, após todas as definições de funções e classes.
 #O loop principal deve ser o último bloco de código a ser executado.
-if __name__ == "__main__":
-    while True:
-        print('=-=' * 20)
-        menu()
-        print('=-=' * 20)
-        try:
-            resposta = int(input('Digite sua resposta: '))
-        except ValueError:
-            print("Entrada inválida. Digite um número.")
-            continue
+while True:
+    print('=-=' * 20)
+    menu()
+    print('=-=' * 20)
+    try:
+        resposta = int(input('Digite sua resposta: '))
+    except ValueError:
+        print("Entrada inválida. Digite um número.")
+        continue
 
-        if resposta == 1:
-            carrinho_de_compras.clear()
-            ComprarProduto()
-        elif resposta == 2:
-            CadastroProduto()
-        elif resposta == 3:
-            GerenciarEstoque()
-        elif resposta == 4:
-            ImportarVendasCSV()
-        elif resposta == 5:
-            Relatorios()
-        elif resposta == 6:
-            print('Saindo do sistema. Até logo!')
-            break
-        else:
-            print("Opção inválida. Tente novamente.")
+    if resposta == 1:
+        carrinho_de_compras.clear()
+        ComprarProduto()
+    elif resposta == 2:
+        CadastroProduto()
+    elif resposta == 3:
+        GerenciarEstoque()
+    elif resposta == 4:
+        ImportarVendasCSV()
+    elif resposta == 5:
+        Relatorios()
+    elif resposta == 6:
+        print('Saindo do sistema. Até logo!')
+        break
+    else:
+        print("Opção inválida. Tente novamente.")
 
 print('=-=' * 20)
 print("Obrigado por usar o sistema de vendas!")
