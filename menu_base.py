@@ -522,6 +522,10 @@ def ProdutoMaisVendido():
         escritor.writerow([produto_mais_vendido, quantidade])
 
     print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
+    print(f"Relatório de Produto Mais Vendido gerado com sucesso por {usuario}!")
+
 
 #relatório agrupado, para melhor visualização dos dados
 def RelatorioAgrupado():
@@ -578,6 +582,10 @@ def RelatorioAgrupado():
     print("\n📁 Os relatórios detalhados por data ainda devem ser gerados separadamente.")
     print("Use a opção [2] do menu de relatórios para aplicar filtros por dia/semana/mês.")
     print("="*60)
+    usuario = input("Digite o seu nome: ")
+    registrar_log("relatorio_agrupado_visualizacao.txt", usuario)
+    print(f"Relatório agrupado visualizado por {usuario}")
+
 
 def RelatorioVendasPorProduto():
     if not lista_vendas:
@@ -607,6 +615,10 @@ def RelatorioVendasPorProduto():
             escritor.writerow([produto, quantidade])
 
     print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
+    usuario = input("Digite o seu nome: ")
+    registrar_log(nome_arquivo, usuario)
+    print(f"Relatório de Vendas por Produto gerado com sucesso por {usuario}!")
+
 
 #Salva o relatório com um nome diferente dos outros para permitir o salvamento em pasta de vários 
 def salvar_relatorio(nome_base, cabecalho, linhas):
@@ -649,6 +661,13 @@ def BaixarRelatorios():
             salvar_relatorio("relatorio_vendas_totais",
                              ["Produto","Preço","Qtd","Data","Subtotal","Vendedor"],
                              linhas)
+            nome_arquivo = salvar_relatorio("relatorio_vendas_totais",
+                                ["Produto","Preço","Qtd","Data","Subtotal","Vendedor"],
+                                linhas)
+            usuario = input("Digite o seu nome: ")
+            registrar_log(nome_arquivo, usuario)
+            print(f"Relatório de Vendas Totais baixado com sucesso por {usuario}!")
+
 
         elif opcao == '2':
             RelatorioVendasPorProduto()  # mostra na tela
