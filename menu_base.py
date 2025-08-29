@@ -1,91 +1,3 @@
-def ProdutoMaisVendidoPordata():
-    print("\n--- Relatório de vendas ---")
-    if not lista_produtos:
-        print("Nenhuma venda registrada ainda.")
-        return
-    
-    print("Escolha o filtro para o relatório:")
-    print("1 - Dia específico")
-    print("2 - Mês específico")
-    print("3 - Semana específica")
-    opcao = input("Opção (1/2/3): ").strip()
-
-    filtro_nome = ""
-    vendas_filtradas = []
-
-    # DIA
-    if opcao == '1':
-        data_str = input("Digite o dia (dd/mm/aaaa): ").strip()
-        try:
-            data_filtro = datetime.strptime(data_str, "%d/%m/%Y").date()
-        except ValueError:
-            print("Data inválida!")
-            return
-        vendas_filtradas = [v for v in lista_vendas if v.data_venda == data_filtro]
-        filtro_nome = f"dia_{data_filtro.strftime('%d-%m-%Y')}"
-
-    # MÊS
-    elif opcao == '2':
-        mes_ano = input("Digite o mês e ano (mm/aaaa): ").strip()
-        try:
-            mes, ano = mes_ano.split("/")
-            mes = int(mes)
-            ano = int(ano)
-            if not (1 <= mes <= 12):
-                print("Mês inválido! Digite entre 01 e 12.")
-                return
-        except ValueError:
-            print("Formato inválido! Use mm/aaaa.")
-            return
-
-        # Filtra vendas pelo mês e ano
-        vendas_filtradas = [v for v in lista_vendas if v.data_venda.month == mes and v.data_venda.year == ano]
-        filtro_nome = f"mes_{mes:02d}_{ano}"
-
-    # SEMANA
-    elif opcao == '3':
-        data_str = input("Digite um dia da semana desejada (dd/mm/aaaa): ").strip()
-        try:
-            data_base = datetime.strptime(data_str, "%d/%m/%Y").date()
-        except ValueError:
-            print("Data inválida!")
-            return
-        inicio_semana = data_base - timedelta(days=data_base.weekday())
-        fim_semana = inicio_semana + timedelta(days=6)
-        vendas_filtradas = [v for v in lista_vendas if inicio_semana <= v.data_venda <= fim_semana]
-        filtro_nome = f"semana_{inicio_semana.strftime('%d-%m-%Y')}_a_{fim_semana.strftime('%d-%m-%Y')}"
-    
-    else:
-        print("Opção inválida!")
-        return
-
-    if not vendas_filtradas:
-        print("Nenhuma venda encontrada para o período.")
-        return
-
-    # Gera CSV
-    total_vendas = sum(v.preco * v.quantidade for v in vendas_filtradas)
-    nome_arquivo = f"relatorio_vendas_{filtro_nome}.csv"
-    caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
-    with open(caminho_arquivo, mode='w', newline='', encoding='utf-8') as arquivo_csv:
-        escritor = csv.writer(arquivo_csv)
-        escritor.writerow(['Produto','Preço Unitário','Quantidade','Data da Venda','Subtotal','Vendedor'])
-        for venda in vendas_filtradas:
-            subtotal = venda.preco * venda.quantidade
-            escritor.writerow([
-                venda.produto.nome,
-                f"{venda.preco:.2f}",
-                venda.quantidade,
-                venda.data_venda.strftime('%d/%m/%Y'),
-                f"{subtotal:.2f}",
-                venda.vendedor if venda.vendedor else "N/A"
-            ])
-        escritor.writerow([])
-        escritor.writerow(['','','','Total Geral', f"{total_vendas:.2f}"])
-    
-    usuario = input("Digite o seu nome: ")
-    registrar_log(nome_arquivo, usuario)
-    print(f"Relatório CSV gerado com sucesso: {caminho_arquivo}")
 ######## Sistema de Vendas #########
 #Importando Biblioteca
 from datetime import datetime, date
@@ -474,11 +386,10 @@ def ProdutoMaisVendidoPordata():
     print("3 - Semana específica")
     opcao = input("Opção (1/2/3): ").strip()
 
-
     filtro_nome = ""
     vendas_filtradas = []
 
-
+    # DIA
     if opcao == '1':
         data_str = input("Digite o dia (dd/mm/aaaa): ").strip()
         try:
@@ -488,33 +399,47 @@ def ProdutoMaisVendidoPordata():
             return
         vendas_filtradas = [v for v in lista_vendas if v.data_venda == data_filtro]
         filtro_nome = f"dia_{data_filtro.strftime('%d-%m-%Y')}"
-    elif opcao == '2':
-        mes_ano_str = input("Digite o mês e ano (mm/aaaa): ").strip()
-        try:
-            mes_ano = datetime.strptime(mes_ano_str, "%m/%Y")
-        except ValueError:
-            print("Mês/Ano inválido!")
-            return
-        vendas_filtradas = [v for v in lista_vendas if v.data_venda.year == mes_ano.year and v.data_venda.month == mes_ano.month]
-        filtro_nome = f"mes_{mes_ano.strftime('%m-%Y')}"
-    elif opcao == '3':
-        data_str = input("Digite uma data da semana desejada (dd/mm/aaaa): ").strip()
-    try:
-        data_base = datetime.strptime(data_str, "%d/%m/%Y").date()
-    except ValueError:
-        print("Data inválida!")
-        return
-    inicio_semana = data_base - timedelta(days=data_base.weekday())
-    fim_semana = inicio_semana + timedelta(days=6)
-    vendas_filtradas = [v for v in lista_vendas if inicio_semana <= v.data_venda <= fim_semana]
-    filtro_nome = f"semana_{inicio_semana.strftime('%d-%m-%Y')}_a_{fim_semana.strftime('%d-%m-%Y')}"
 
+    # MÊS
+    elif opcao == '2':
+        mes_ano = input("Digite o mês e ano (mm/aaaa): ").strip()
+        try:
+            mes, ano = mes_ano.split("/")
+            mes = int(mes)
+            ano = int(ano)
+            if not (1 <= mes <= 12):
+                print("Mês inválido! Digite entre 01 e 12.")
+                return
+        except ValueError:
+            print("Formato inválido! Use mm/aaaa.")
+            return
+
+        # Filtra vendas pelo mês e ano
+        vendas_filtradas = [v for v in lista_vendas if v.data_venda.month == mes and v.data_venda.year == ano]
+        filtro_nome = f"mes_{mes:02d}_{ano}"
+
+    # SEMANA
+    elif opcao == '3':
+        data_str = input("Digite um dia da semana desejada (dd/mm/aaaa): ").strip()
+        try:
+            data_base = datetime.strptime(data_str, "%d/%m/%Y").date()
+        except ValueError:
+            print("Data inválida!")
+            return
+        inicio_semana = data_base - timedelta(days=data_base.weekday())
+        fim_semana = inicio_semana + timedelta(days=6)
+        vendas_filtradas = [v for v in lista_vendas if inicio_semana <= v.data_venda <= fim_semana]
+        filtro_nome = f"semana_{inicio_semana.strftime('%d-%m-%Y')}_a_{fim_semana.strftime('%d-%m-%Y')}"
+    
+    else:
+        print("Opção inválida!")
+        return
 
     if not vendas_filtradas:
         print("Nenhuma venda encontrada para o período.")
         return
 
-
+    # Gera CSV
     total_vendas = sum(v.preco * v.quantidade for v in vendas_filtradas)
     nome_arquivo = f"relatorio_vendas_{filtro_nome}.csv"
     caminho_arquivo = os.path.join(PASTA_RELATORIOS, nome_arquivo)
@@ -533,6 +458,7 @@ def ProdutoMaisVendidoPordata():
             ])
         escritor.writerow([])
         escritor.writerow(['','','','Total Geral', f"{total_vendas:.2f}"])
+    
     usuario = input("Digite o seu nome: ")
     registrar_log(nome_arquivo, usuario)
     print(f"Relatório CSV gerado com sucesso: {caminho_arquivo}")
@@ -1003,18 +929,18 @@ while True:
         continue
     if resposta == 1:
         carrinho_de_compras.clear()
-        # ComprarProduto() (mantém função original)
+        ComprarProduto() #(mantém função original)
     elif resposta == 2:
-        # CadastroProduto()
+        CadastroProduto()
         pass
     elif resposta == 3:
-        # GerenciarEstoque()
+        GerenciarEstoque()
         pass
     elif resposta == 4:
-        # ImportarVendasCSV()
+        ImportarVendasCSV()
         pass
     elif resposta == 5:
-        # Relatorios()
+        Relatorios()
         pass
     elif resposta == 6:
         print('Saindo do sistema. Até logo!')
