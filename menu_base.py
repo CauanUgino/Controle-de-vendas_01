@@ -915,37 +915,38 @@ lista_produtos.append(Produto("Café 500g", 16.75, 8, "05/06/2026"))
 #####Loop principal essencial do sistema######
 #Ele deve ficar no final do código, após todas as definições de funções e classes.
 #O loop principal deve ser o último bloco de código a ser executado.
+if __name__ == "__main__":
 # Loop principal
-while True:
-    print('=-=' * 20)
-    menu()
-    print('=-=' * 20)
-    try:
-        resposta = int(input('Digite sua resposta: '))
-    except ValueError:
-        print("Entrada inválida. Digite um número.")
-        continue
-    if resposta == 1:
-        carrinho_de_compras.clear()
-        ComprarProduto() #(mantém função original)
-    elif resposta == 2:
-        CadastroProduto()
-        pass
-    elif resposta == 3:
-        GerenciarEstoque()
-        pass
-    elif resposta == 4:
-        ImportarVendasCSV()
-        pass
-    elif resposta == 5:
-        Relatorios()
-        pass
-    elif resposta == 6:
-        print('Saindo do sistema. Até logo!')
-        break
-    else:
-        print("Opção inválida. Tente novamente.")
+    while True:
+        print('=-=' * 20)
+        menu()
+        print('=-=' * 20)
+        try:
+            resposta = int(input('Digite sua resposta: '))
+        except ValueError:
+            print("Entrada inválida. Digite um número.")
+            continue
+        if resposta == 1:
+            carrinho_de_compras.clear()
+            ComprarProduto() #(mantém função original)
+        elif resposta == 2:
+            CadastroProduto()
+            pass
+        elif resposta == 3:
+            GerenciarEstoque()
+            pass
+        elif resposta == 4:
+            ImportarVendasCSV()
+            pass
+        elif resposta == 5:
+            Relatorios()
+            pass
+        elif resposta == 6:
+            print('Saindo do sistema. Até logo!')
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
 
 
-print('=-=' * 20)
-print("Obrigado por usar o sistema de vendas!")
+    print('=-=' * 20)
+    print("Obrigado por usar o sistema de vendas!")
