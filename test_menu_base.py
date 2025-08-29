@@ -23,7 +23,7 @@ def limpar_listas():
     mb.registro_vendas.clear()
 
 
-# PRODUTO
+
 def test_produto_valido():
     validade = (date.today() + timedelta(days=10)).strftime("%d/%m/%Y")
     p = mb.Produto("Arroz", 10, 5, validade)
@@ -53,7 +53,7 @@ def test_atualizar_estoque_excede():
     with pytest.raises(ValueError):
         p.atualizar_estoque(10)
 
-# COMPRA 
+
 def test_finalizar_compra(monkeypatch):
     validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
     p = mb.Produto("Biscoito", 2.5, 3, validade)
@@ -78,7 +78,8 @@ def test_cancelar_compra_restaura_estoque():
     assert p.quantidade == 2
     assert mb.carrinho_de_compras == []
 
-# GERENCIAMENTO DE ESTOQUE 
+
+
 def test_remover_produto(monkeypatch):
     validade = (date.today() + timedelta(days=2)).strftime("%d/%m/%Y")
     p = mb.Produto("Arroz", 10, 5, validade)
@@ -110,7 +111,7 @@ def test_editar_produto(monkeypatch):
     assert p.preco == 12
     assert p.quantidade == 5
 
-# RELATÓRIOS
+
 def test_produto_mais_vendido(monkeypatch):
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=10)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -134,7 +135,7 @@ def test_relatorio_vendas_por_produto(monkeypatch):
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
     mb.RelatorioVendasPorProduto()
 
-# IMPORTAR CSV 
+
 def test_importar_vendas_csv(tmp_path, monkeypatch):
     arquivo = tmp_path / "vendas.csv"
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
@@ -157,7 +158,7 @@ def test_importar_vendas_csv(tmp_path, monkeypatch):
     assert len(mb.lista_vendas) == 1
     assert mb.lista_vendas[0].produto.nome == "Arroz"
 
-# MENU PRINCIPAL
+
 def test_menu_opcoes(monkeypatch):
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -172,7 +173,7 @@ def test_menu_opcoes(monkeypatch):
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
 
 
-# TESTES DE VENDAS
+
 def test_finalizar_ou_cancelar(monkeypatch):
     p = mb.Produto("Leite", 5, 3, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -193,7 +194,7 @@ def test_finalizar_ou_cancelar_cancel(monkeypatch):
     mb.FinalizarOuCancelarCompra()
     assert mb.carrinho_de_compras == []
 
-# CADASTRO PRODUTOS 
+
 def test_cadastro_produto(monkeypatch):
     entradas = iter([
         "Arroz", "10", "5", (date.today()+timedelta(days=5)).strftime("%d/%m/%Y")
@@ -202,14 +203,14 @@ def test_cadastro_produto(monkeypatch):
     mb.CadastroProduto()
     assert len(mb.lista_produtos) == 1
 
-# RELATÓRIOS
+
 def test_relatorios_vazios(monkeypatch):
     entradas = iter(["6"])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
     mb.Relatorios() 
 
-# IMPORTAR CSV 
+
 def test_importar_csv_invalido(tmp_path, monkeypatch):
     arquivo = tmp_path / "vendas_invalid.csv"
     with open(arquivo, "w", newline="", encoding="utf-8") as f:
@@ -220,7 +221,7 @@ def test_importar_csv_invalido(tmp_path, monkeypatch):
     mb.ImportarVendasCSV()
     assert len(mb.lista_vendas) == 0
 
-# LISTAR PRODUTOS
+
 def test_listar_produtos(capsys):
     p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -228,7 +229,7 @@ def test_listar_produtos(capsys):
     captured = capsys.readouterr()
     assert "Arroz" in captured.out
 
-# COMPRAR PRODUTO 
+
 def test_comprar_produto(monkeypatch):
     p = mb.Produto("Feijão", 5, 3, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -247,7 +248,7 @@ def test_produto_mais_vendido_relatorio_agrupado(monkeypatch):
     mb.RelatorioAgrupado()
     mb.RelatorioVendasPorProduto()
 
-# ARQUIVOS
+
 def test_nota_fiscal_conteudo(monkeypatch):
     p = mb.Produto("Biscoito", 2, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     mb.lista_produtos.append(p)
@@ -262,7 +263,7 @@ def test_nota_fiscal_conteudo(monkeypatch):
     os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
 
 
-# TESTE ATUALIZAR ESTOQUE NEGATIVO
+
 def test_atualizar_estoque_negativo():
     validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
     p = mb.Produto("Suco", 5, 2, validade)
@@ -270,7 +271,7 @@ def test_atualizar_estoque_negativo():
     with pytest.raises(ValueError):
         p.atualizar_estoque(10)
 
-# CANCELAMENTO PARCIAL DE CARRINHO
+
 def test_cancelar_compra_multipla(monkeypatch):
     validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
     p1 = mb.Produto("Arroz", 10, 5, validade)
@@ -284,7 +285,7 @@ def test_cancelar_compra_multipla(monkeypatch):
     assert p1.quantidade == 7  
     assert p2.quantidade == 4
 
-# IMPORTAR CSV VAZIO 
+
 def test_importar_csv_vazio(tmp_path, monkeypatch):
     arquivo = tmp_path / "vazio.csv"
     arquivo.write_text("nome,preco,quantidade,data_validade,data,vendedor\n")
@@ -292,7 +293,7 @@ def test_importar_csv_vazio(tmp_path, monkeypatch):
     mb.ImportarVendasCSV()
     assert len(mb.lista_vendas) == 0
 
-# MENU COM ENTRADAS INVALIDAS REPETIDAS
+
 def test_menu_entrada_invalida(monkeypatch):
     entradas = iter(["abc", "999", "6"])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
@@ -310,20 +311,20 @@ def test_menu_entrada_invalida(monkeypatch):
         mb.MenuPrincipal()
 
 
-# FINALIZAR COMPRA SEM PRODUTOS
+
 def test_finalizar_compra_vazio(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "")
     mb.FinalizarCompra()
     assert mb.carrinho_de_compras == []
 
-# RELATORIOS COM LISTAS VAZIAS
+
 def test_relatorios_vazios_adicionais(monkeypatch):
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
     mb.ProdutoMaisVendido()
     mb.RelatorioAgrupado()
     mb.RelatorioVendasPorProduto()
 
-# NOTA FISCAL COM VÁRIOS PRODUTOS
+
 def test_nota_fiscal_varios(monkeypatch):
     p1 = mb.Produto("Biscoito", 2, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
     p2 = mb.Produto("Suco", 3, 1, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
