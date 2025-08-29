@@ -269,18 +269,23 @@ def Relatorios():
 
         if opcao == '1':
             ProdutoMaisVendido()
+            ProdutoMaisVendido(usuario)
 
         elif opcao == '2':
             ProdutoMaisVendidoPordata()
-            
+            ProdutoMaisVendidoPordata(usuario)
+
         elif opcao == '3':
             GerarRelatorioVendasTotais()
+            GerarRelatorioVendasTotais(usuario)
 
         elif opcao == '4':
             RelatorioVendasPorProduto()
+            RelatorioVendasPorProduto(usuario)
 
         elif opcao== '5':
             RelatorioAgrupado()
+            RelatorioAgrupado(usuario)
         
         elif opcao== '6':    
             print("Voltando ao menu principal...")
@@ -326,7 +331,7 @@ def GerenciarEstoque():
             print("Opção inválida! Tente novamente.")
 
 # Função para gerar o relatório de vendas totais
-def GerarRelatorioVendasTotais():
+def GerarRelatorioVendasTotais(usuario="Sistema"):
     print("\n--- Relatório de Vendas Totais ---")
     if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
@@ -374,12 +379,12 @@ def GerarRelatorioVendasTotais():
     print(f"\nRelatório CSV gerado com sucesso: {caminho_arquivo}")
 
     # Registrar log corretamente
-    usuario = input("Digite o seu nome: ")
     registrar_log(nome_arquivo, usuario)
     print(f"Relatório de vendas totais gerado com sucesso por {usuario}!")
+    return nome_arquivo
 
 # Função para relatório de produtos mais vendidos por data
-def ProdutoMaisVendidoPordata():
+def ProdutoMaisVendidoPordata(usuario="Sistema"):
     print("\n--- Relatório de vendas ---")
     if not lista_produtos:
         print("Nenhuma venda registrada ainda.")
@@ -464,9 +469,9 @@ def ProdutoMaisVendidoPordata():
         escritor.writerow([])
         escritor.writerow(['','','','Total Geral', f"{total_vendas:.2f}"])
     
-    usuario = input("Digite o seu nome: ")
-    registrar_log(nome_arquivo, usuario)
-    print(f"Relatório CSV gerado com sucesso: {caminho_arquivo}")
+        registrar_log(nome_arquivo, usuario)
+        print(f"Relatório de vendas por {usuario} gerado com sucesso!")
+        return nome_arquivo
 
     # Gerar arquivo CSV
     nome_arquivo = f"relatorio_vendas_{filtro_nome}.csv"
@@ -493,7 +498,7 @@ def ProdutoMaisVendidoPordata():
     print(f"Relatório CSV gerado com sucesso: {nome_arquivo}")
 
 
-def ProdutoMaisVendido():
+def ProdutoMaisVendido(usuario="Sistema"):
     if not lista_vendas:
         print("Nenhuma venda registrada.")
         return
@@ -522,13 +527,13 @@ def ProdutoMaisVendido():
         escritor.writerow([produto_mais_vendido, quantidade])
 
     print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
-    usuario = input("Digite o seu nome: ")
     registrar_log(nome_arquivo, usuario)
     print(f"Relatório de Produto Mais Vendido gerado com sucesso por {usuario}!")
+    return nome_arquivo
 
 
 #relatório agrupado, para melhor visualização dos dados
-def RelatorioAgrupado():
+def RelatorioAgrupado(usuario="Sistema"):
     print("\n" + "="*60)
     print("📊 PAINEL DE RELATÓRIOS DE VENDAS".center(60))
     print("="*60)
@@ -582,12 +587,11 @@ def RelatorioAgrupado():
     print("\n📁 Os relatórios detalhados por data ainda devem ser gerados separadamente.")
     print("Use a opção [2] do menu de relatórios para aplicar filtros por dia/semana/mês.")
     print("="*60)
-    usuario = input("Digite o seu nome: ")
     registrar_log("relatorio_agrupado_visualizacao.txt", usuario)
     print(f"Relatório agrupado visualizado por {usuario}")
 
 
-def RelatorioVendasPorProduto():
+def RelatorioVendasPorProduto(usuario="Sistema"):
     if not lista_vendas:
         print("Nenhuma venda registrada ainda.")
         return
@@ -614,10 +618,10 @@ def RelatorioVendasPorProduto():
         for produto, quantidade in vendas_por_produto.items():
             escritor.writerow([produto, quantidade])
 
-    print(f"\n📂 Relatório salvo em: {caminho_arquivo}")
-    usuario = input("Digite o seu nome: ")
+    print(f"\nRelatório salvo em: 📂 {caminho_arquivo}")
     registrar_log(nome_arquivo, usuario)
     print(f"Relatório de Vendas por Produto gerado com sucesso por {usuario}!")
+    return (nome_arquivo)
 
 
 #Salva o relatório com um nome diferente dos outros para permitir o salvamento em pasta de vários 
@@ -634,7 +638,7 @@ def salvar_relatorio(nome_base, cabecalho, linhas):
     return nome_arquivo
 
 #Baixa os relatórios na pasta destino, quando acionado
-def BaixarRelatorios():
+def BaixarRelatorios(usuario="Sistema"):
     while True:
         print("\n--- BAIXAR RELATÓRIOS ---")
         print("[1] - Vendas Totais")
@@ -647,35 +651,16 @@ def BaixarRelatorios():
             if not lista_vendas:
                 print("Nenhuma venda registrada.")
                 continue
-            linhas = []
-            for venda in lista_vendas:
-                subtotal = venda.preco * venda.quantidade
-                linhas.append([
-                    venda.produto.nome,
-                    f"{venda.preco:.2f}",
-                    venda.quantidade,
-                    venda.data_venda.strftime('%d/%m/%Y'),
-                    f"{subtotal:.2f}",
-                    venda.vendedor if venda.vendedor else "Não informado"
-                ])
-            salvar_relatorio("relatorio_vendas_totais",
-                             ["Produto","Preço","Qtd","Data","Subtotal","Vendedor"],
-                             linhas)
-            nome_arquivo = salvar_relatorio("relatorio_vendas_totais",
-                                ["Produto","Preço","Qtd","Data","Subtotal","Vendedor"],
-                                linhas)
-            usuario = input("Digite o seu nome: ")
-            registrar_log(nome_arquivo, usuario)
-            print(f"Relatório de Vendas Totais baixado com sucesso por {usuario}!")
-
+            nome_arquivo = GerarRelatorioVendasTotais(usuario)
+            print(f"Relatório baixado: {nome_arquivo}")
 
         elif opcao == '2':
-            RelatorioVendasPorProduto()  # mostra na tela
-            # Aqui você pode adaptar para também salvar em CSV
+            nome_arquivo = RelatorioVendasPorProduto(usuario)
+            print(f"Relatório baixado: {nome_arquivo}")
 
         elif opcao == '3':
-            ProdutoMaisVendido()  # mostra na tela
-            # Também pode salvar em CSV se desejar
+            nome_arquivo = ProdutoMaisVendido(usuario)
+            print(f"Relatório baixado: {nome_arquivo}")
 
         elif opcao == '4':
             break
@@ -1011,9 +996,11 @@ if __name__ == "__main__":
             pass
         elif resposta == 5:
             Relatorios()
+            Relatorios(usuario)
             pass
         elif resposta == 6:
             BaixarRelatorios()
+            BaixarRelatorios(usuario)
             pass
         elif resposta == 7:
             print('Saindo do sistema. Até logo!')
