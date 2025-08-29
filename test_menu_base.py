@@ -367,7 +367,7 @@ def test_relatorio_vendas_por_produto_exibe_relatorio(capsys):
     mb.lista_vendas.append(v)
     mb.RelatorioVendasPorProduto()
     captured = capsys.readouterr()
-    assert "Ranking de vendas" in captured.out
+    assert "--- Relatório de Vendas por Produto ---" in captured.out
 
 
 def test_remover_produto_inexistente(monkeypatch, capsys):
@@ -538,3 +538,41 @@ def test_comprar_produto_quantidade_zero(monkeypatch, capsys):
     mb.ComprarProduto()
     captured = capsys.readouterr()
     assert "Quantidade inválida" in captured.out or mb.lista_vendas[-1].quantidade > 0
+    
+def test_gerar_relatorio_vendas_totais(monkeypatch, tmp_path):
+    p = mb.Produto("Arroz", 10, 2, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 1, date.today(), vendedor="Maria"))
+
+    monkeypatch.setattr("builtins.input", lambda _: "Tester")
+    mb.GerarRelatorioVendasTotais()
+
+    arquivos = os.listdir("relatorios")
+    assert any("relatorio_vendas_totais" in arq for arq in arquivos)
+
+def test_produto_mais_vendido_por_dia(monkeypatch):
+    p = mb.Produto("Feijão", 5, 10, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 2, date.today(), vendedor="José"))
+
+    entradas = iter([
+        "1",  # escolhe filtro por dia
+        date.today().strftime("%d/%m/%Y"),  # data de hoje
+        "Tester",  # primeira vez que pede usuário
+        "Tester"   # segunda vez (duplicado no código)
+    ])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+
+    mb.ProdutoMaisVendidoPordata()
+
+def test_baixar_relatorios(monkeypatch):
+    p = mb.Produto("Macarrão", 4, 10, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 1, date.today(), vendedor="Ana"))
+
+    entradas = iter(["1", "4"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.BaixarRelatorios()
+
+    arquivos = os.listdir("relatorios")
+    assert any("relatorio_vendas_totais" in arq for arq in arquivos)
