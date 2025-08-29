@@ -64,8 +64,8 @@ def test_finalizar_compra(monkeypatch):
     mb.FinalizarCompra()
     assert mb.carrinho_de_compras == []
     assert mb.registro_vendas[p.nome] == 2
-    assert os.path.exists("nota_fiscal.txt")
-    os.remove("nota_fiscal.txt")
+    assert os.path.exists(os.path.join("relatorios", "nota_fiscal.txt"))
+    os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
 
 
 def test_cancelar_compra_restaura_estoque():
@@ -256,10 +256,10 @@ def test_nota_fiscal_conteudo(monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "")
     mb.FinalizarCompra()
 
-    with open("nota_fiscal.txt", "r", encoding="utf-8") as f:
+    with open(os.path.join("relatorios", "nota_fiscal.txt"), "r", encoding="utf-8") as f:
         conteudo = f.read()
         assert p.nome in conteudo
-    os.remove("nota_fiscal.txt")
+    os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
 
 
 # TESTE ATUALIZAR ESTOQUE NEGATIVO
@@ -331,8 +331,8 @@ def test_nota_fiscal_varios(monkeypatch):
     mb.carrinho_de_compras.extend([(p1.nome, p1.preco, 1), (p2.nome, p2.preco, 1)])
     monkeypatch.setattr("builtins.input", lambda _: "")
     mb.FinalizarCompra()
-    with open("nota_fiscal.txt", "r", encoding="utf-8") as f:
+    with open(os.path.join("relatorios", "nota_fiscal.txt"), "r", encoding="utf-8") as f:
         conteudo = f.read()
         assert "Biscoito" in conteudo
         assert "Suco" in conteudo
-    os.remove("nota_fiscal.txt")
+    os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
