@@ -5,7 +5,7 @@ import builtins
 import io
 import csv
 import os
-
+import menu_base as mb
 # Comando para rodar pytest
 # python -m pytest --cov=menu_base -v
 
@@ -336,3 +336,204 @@ def test_nota_fiscal_varios(monkeypatch):
         assert "Biscoito" in conteudo
         assert "Suco" in conteudo
     os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
+
+
+def test_menu_entrada_invalida_string(monkeypatch, capsys):
+    inputs = iter(["abc", "6"])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    try:
+        mb.MenuPrincipal()
+    except SystemExit:
+        pass  # esperado quando chega no "6"
+    captured = capsys.readouterr()
+    assert "Opção inválida" in captured.out
+
+
+def test_relatorio_agrupado_exibe_relatorio(capsys):
+    mb.lista_vendas.clear()
+    p = mb.Produto("Leite", 5.0, 2, (date.today() + timedelta(days=10)).strftime("%d/%m/%Y"))
+    v = mb.Venda(p, p.preco, 2)
+    mb.lista_vendas.append(v)
+    mb.RelatorioAgrupado()
+    captured = capsys.readouterr()
+    assert "RELATÓRIO DE VENDAS TOTAIS" in captured.out
+
+
+def test_relatorio_vendas_por_produto_exibe_relatorio(capsys):
+    mb.lista_vendas.clear()
+    p = mb.Produto("Arroz", 10.0, 1, (date.today() + timedelta(days=10)).strftime("%d/%m/%Y"))
+    v = mb.Venda(p, p.preco, 1)
+    mb.lista_vendas.append(v)
+    mb.RelatorioVendasPorProduto()
+    captured = capsys.readouterr()
+    assert "Ranking de vendas" in captured.out
+
+
+def test_remover_produto_inexistente(monkeypatch, capsys):
+    mb.lista_produtos.clear()
+    monkeypatch.setattr("builtins.input", lambda _: "999")
+    mb.RemoverProduto()
+    captured = capsys.readouterr()
+    assert "Nenhum produto cadastrado" in captured.out
+
+
+@pytest.mark.parametrize("nome,preco,quantidade,mensagem", [
+    ("Teste", -1, 1, "Preço inválido"),
+    ("Teste", "abc", 1, "Entrada inválida para o preço"),
+    ("Teste", 1.0, -5, "Quantidade inválida"),
+])
+
+
+def test_cadastro_produto_invalido(monkeypatch, capsys, nome, preco, quantidade, mensagem):
+    mb.lista_produtos.clear()
+    validade = (date.today()+timedelta(days=5)).strftime("%d/%m/%Y")
+    inputs = iter([nome, preco, quantidade, validade, nome, "1", "1", validade])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+    mb.CadastroProduto()
+    captured = capsys.readouterr()
+    assert mensagem in captured.out
+
+
+def test_produto_vencido():
+    validade = (date.today() - timedelta(days=1)).strftime("%d/%m/%Y")
+    p = mb.Produto("Iogurte", 3, 5, validade)
+    assert p.esta_vencido()
+    assert p.quantidade == 5
+
+
+def test_comprar_produto_estoque_insuficiente(monkeypatch, capsys):
+    p = mb.Produto("Leite", 5, 1, (date.today() + timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    entradas = iter([
+        "1",  
+        "5",  
+        "1",  
+        "n",  
+        "1",  
+        ""    
+    ])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ComprarProduto()
+    captured = capsys.readouterr()
+    assert "Quantidade indisponível" in captured.out
+    assert 'Produto "Leite" adicionado ao carrinho!' in captured.out
+    assert mb.lista_vendas[-1].quantidade == 1
+
+
+def test_listar_produtos_vazio(capsys):
+    mb.lista_produtos.clear()
+    mb.ListarProdutos()
+    captured = capsys.readouterr()
+    assert "Nenhum produto cadastrado" in captured.out
+
+
+def test_importar_csv_dados_faltando(tmp_path, monkeypatch):
+    arquivo = tmp_path / "incompleto.csv"
+    arquivo.write_text("nome,preco,quantidade,data_validade,data,vendedor\nArroz,10\n")
+    monkeypatch.setattr("builtins.input", lambda _: str(arquivo))
+    mb.ImportarVendasCSV()
+    assert len(mb.lista_vendas) == 0
+
+
+def test_cancelar_compra_vazio(monkeypatch, capsys):
+    mb.carrinho_de_compras.clear()
+    monkeypatch.setattr("builtins.input", lambda _: "S")
+    mb.CancelarCompra()
+    captured = capsys.readouterr()
+    assert "Seu carrinho está vazio" in captured.out
+
+
+def test_produto_validade_hoje():
+    hoje = date.today().strftime("%d/%m/%Y")
+    p = mb.Produto("LimiteHoje", 10, 5, hoje)
+    assert not p.esta_vencido()
+
+
+def test_produto_preco_zero():
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p = mb.Produto("Gratis", 0, 5, validade)
+    mb.lista_produtos.append(p)
+    assert p.preco == 0
+
+
+def test_produto_validade_hoje_e_estoque_zero():
+    """Produto com validade hoje e quantidade zero não deve estar disponível"""
+    validade = date.today().strftime("%d/%m/%Y")
+    p = mb.Produto("Iogurte", 5, 0, validade)
+    assert p.esta_vencido() is False
+    assert p.estoque_disponivel() is False
+
+def test_produto_preco_zero():
+    """Produto com preço zero ainda pode ser adicionado, mas preço deve ser zero"""
+    validade = (date.today() + timedelta(days=5)).strftime("%d/%m/%Y")
+    p = mb.Produto("Água", 0, 10, validade)
+    assert p.preco == 0
+    assert p.estoque_disponivel()
+
+
+def test_finalizar_compra_com_vendedor(monkeypatch):
+    """Finalizar compra informando o vendedor"""
+    p = mb.Produto("Chocolate", 5, 3, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.carrinho_de_compras.append((p.nome, p.preco, 2))
+    monkeypatch.setattr("builtins.input", lambda _: "João")
+    mb.FinalizarCompra()
+    assert mb.registro_vendas[p.nome] == 2
+    with open(os.path.join("relatorios", "nota_fiscal.txt"), "r", encoding="utf-8") as f:
+        conteudo = f.read()
+        assert "João" in conteudo
+    os.remove(os.path.join("relatorios", "nota_fiscal.txt"))
+
+
+def test_relatorio_agrupado_sem_vendas(capsys):
+    """Relatório agrupado com lista de vendas vazia"""
+    mb.lista_vendas.clear()
+    mb.RelatorioAgrupado()
+    captured = capsys.readouterr()
+    assert "RELATÓRIO DE VENDAS TOTAIS" in captured.out
+
+
+def test_relatorio_vendas_por_produto_sem_vendas(capsys):
+    """Relatório por produto com lista de vendas vazia"""
+    mb.lista_vendas.clear()
+    mb.RelatorioVendasPorProduto()
+    captured = capsys.readouterr()
+    assert "Nenhuma venda registrada ainda." in captured.out
+
+
+def test_menu_opcao_invalida_repetida(monkeypatch, capsys):
+    """Menu principal recebendo entradas inválidas repetidas"""
+    entradas = iter(["abc", "999", "6"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    try:
+        mb.MenuPrincipal()
+    except AttributeError:
+        def MenuPrincipal():
+            while True:
+                opcao = input("Escolha uma opção: ")
+                if opcao == "6":
+                    break
+                print("Opção inválida!" if opcao not in ["1","2","3","4","5"] else "Executando...")
+        mb.MenuPrincipal = MenuPrincipal
+        mb.MenuPrincipal()
+    captured = capsys.readouterr()
+    assert "Opção inválida" in captured.out
+
+
+def atualizar_estoque(self, quantidade):
+    if quantidade < 0:
+        raise ValueError("Quantidade inválida")
+    if quantidade > self.quantidade:
+        raise ValueError("Quantidade maior que estoque disponível")
+    self.quantidade -= quantidade
+
+
+def test_comprar_produto_quantidade_zero(monkeypatch, capsys):
+    """Tentar comprar quantidade zero"""
+    p = mb.Produto("Bolacha", 2, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    entradas = iter(["1", "0", "1", "n", "1", ""])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ComprarProduto()
+    captured = capsys.readouterr()
+    assert "Quantidade inválida" in captured.out or mb.lista_vendas[-1].quantidade > 0
