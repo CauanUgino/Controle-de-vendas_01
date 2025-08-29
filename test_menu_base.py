@@ -117,7 +117,7 @@ def test_produto_mais_vendido(monkeypatch):
     mb.lista_produtos.append(p)
     mb.registro_vendas[p.nome] = 3
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    mb.ProdutoMaisVendido()
+    mb.ProdutoMaisVendido(usuario="Tester")
 
 
 def test_relatorio_agrupado(monkeypatch):
@@ -125,7 +125,7 @@ def test_relatorio_agrupado(monkeypatch):
     mb.lista_produtos.append(p)
     mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    mb.RelatorioAgrupado()
+    mb.RelatorioAgrupado(usuario="Tester")
 
 
 def test_relatorio_vendas_por_produto(monkeypatch):
@@ -133,7 +133,7 @@ def test_relatorio_vendas_por_produto(monkeypatch):
     mb.lista_produtos.append(p)
     mb.lista_vendas.append(mb.Venda(p, 2, date.today()))
     monkeypatch.setattr("builtins.print", lambda *args, **kwargs: None)
-    mb.RelatorioVendasPorProduto()
+    mb.RelatorioVendasPorProduto(usuario="Tester")
 
 
 def test_importar_vendas_csv(tmp_path, monkeypatch):
@@ -544,8 +544,10 @@ def test_gerar_relatorio_vendas_totais(monkeypatch, tmp_path):
     mb.lista_produtos.append(p)
     mb.lista_vendas.append(mb.Venda(p, 1, date.today(), vendedor="Maria"))
 
-    monkeypatch.setattr("builtins.input", lambda _: "Tester")
-    mb.GerarRelatorioVendasTotais()
+    mb.GerarRelatorioVendasTotais(usuario="Tester")
+
+    arquivos = os.listdir("relatorios")
+    assert any("relatorio_vendas_totais" in arq for arq in arquivos)
 
     arquivos = os.listdir("relatorios")
     assert any("relatorio_vendas_totais" in arq for arq in arquivos)
@@ -555,15 +557,10 @@ def test_produto_mais_vendido_por_dia(monkeypatch):
     mb.lista_produtos.append(p)
     mb.lista_vendas.append(mb.Venda(p, 2, date.today(), vendedor="José"))
 
-    entradas = iter([
-        "1",  # escolhe filtro por dia
-        date.today().strftime("%d/%m/%Y"),  # data de hoje
-        "Tester",  # primeira vez que pede usuário
-        "Tester"   # segunda vez (duplicado no código)
-    ])
+    entradas = iter(["1", date.today().strftime("%d/%m/%Y")])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
 
-    mb.ProdutoMaisVendidoPordata()
+    mb.ProdutoMaisVendidoPordata(usuario="Tester")
 
 def test_baixar_relatorios(monkeypatch):
     p = mb.Produto("Macarrão", 4, 10, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
@@ -572,7 +569,81 @@ def test_baixar_relatorios(monkeypatch):
 
     entradas = iter(["1", "4"])
     monkeypatch.setattr("builtins.input", lambda _: next(entradas))
-    mb.BaixarRelatorios()
+    mb.BaixarRelatorios(usuario="Tester")
 
     arquivos = os.listdir("relatorios")
     assert any("relatorio_vendas_totais" in arq for arq in arquivos)
+    
+def test_baixar_relatorios_por_produto(monkeypatch):
+    p = mb.Produto("Feijão", 5, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 2, date.today(), vendedor="Ana"))
+
+    entradas = iter(["2", "4"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.BaixarRelatorios(usuario="Tester")
+
+    arquivos = os.listdir("relatorios")
+    assert any("relatorio_vendas_por_produto" in arq for arq in arquivos)
+
+
+def test_baixar_relatorios_produto_mais_vendido(monkeypatch):
+    p = mb.Produto("Arroz", 10, 5, (date.today()+timedelta(days=5)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.registro_vendas[p.nome] = 3
+
+    entradas = iter(["3", "4"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.BaixarRelatorios(usuario="Tester")
+
+    arquivos = os.listdir("relatorios")
+    assert any("produto_mais_vendido" in arq for arq in arquivos)
+
+def test_produto_mais_vendido_por_mes(monkeypatch):
+    p = mb.Produto("Macarrão", 4, 10, (date.today()+timedelta(days=30)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 3, date.today(), vendedor="João"))
+
+    entradas = iter(["2", str(date.today().month), str(date.today().year)])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ProdutoMaisVendidoPordata(usuario="Tester")
+
+
+def test_produto_mais_vendido_por_ano(monkeypatch):
+    p = mb.Produto("Café", 8, 10, (date.today()+timedelta(days=365)).strftime("%d/%m/%Y"))
+    mb.lista_produtos.append(p)
+    mb.lista_vendas.append(mb.Venda(p, 1, date.today(), vendedor="Maria"))
+
+    entradas = iter(["3", str(date.today().year)])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ProdutoMaisVendidoPordata(usuario="Tester")
+
+def test_produto_mais_vendido_por_data_sem_vendas(monkeypatch):
+    mb.lista_vendas.clear()
+    entradas = iter(["1", date.today().strftime("%d/%m/%Y")])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ProdutoMaisVendidoPordata(usuario="Tester")
+
+def test_produto_mais_vendido_por_data_opcao_invalida(monkeypatch, capsys):
+    # Se lista de vendas estiver vazia, a função sai antes
+    mb.lista_vendas.clear()
+    entradas = iter(["9"])
+    monkeypatch.setattr("builtins.input", lambda _: next(entradas))
+    mb.ProdutoMaisVendidoPordata(usuario="Tester")
+    captured = capsys.readouterr()
+    assert "Nenhuma venda registrada" in captured.out
+
+
+def test_relatorio_vendas_totais_sem_vendas(capsys):
+    mb.lista_vendas.clear()
+    mb.GerarRelatorioVendasTotais(usuario="Tester")
+    captured = capsys.readouterr()
+    assert "Nenhuma venda registrada ainda." in captured.out
+
+def test_produto_mais_vendido_sem_vendas(capsys):
+    mb.registro_vendas.clear()
+    mb.ProdutoMaisVendido(usuario="Tester")
+    captured = capsys.readouterr()
+    assert "Nenhuma venda registrada." in captured.out
+
+
