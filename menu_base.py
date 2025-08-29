@@ -581,7 +581,7 @@ def RelatorioAgrupado():
 
 def RelatorioVendasPorProduto():
     if not lista_vendas:
-        print("Nenhuma venda registrada.")
+        print("Nenhuma venda registrada ainda.")
         return
 
     vendas_por_produto = {}
